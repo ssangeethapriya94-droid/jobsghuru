@@ -130,6 +130,25 @@ export async function POST(
       },
     });
 
+    // Create in-app notification for candidate
+    try {
+      await db.notification.create({
+        data: {
+          userId: application.candidateId || undefined,
+          recipientEmail: application.candidateEmail,
+          companyId: employer.companyId,
+          applicationId: application.id,
+          title: `Interview Scheduled: ${interview.title}`,
+          message: `${application.job.company.name} has scheduled an interview for ${application.job.title} on ${parsedDate.toLocaleString()}.`,
+          type: "INTERVIEW_SCHEDULED",
+          link: `/candidate/interviews/${secureToken}`,
+          read: false,
+        },
+      });
+    } catch (notifErr) {
+      console.warn("Failed to create candidate notification record:", notifErr);
+    }
+
     // Build public interview candidate URL
     const appBaseUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3001";
     const candidateInterviewUrl = `${appBaseUrl}/candidate/interviews/${secureToken}`;

@@ -40,6 +40,46 @@ export default function EmployerApplicationsPage() {
   const [isPrivateNote, setIsPrivateNote] = useState(false);
   const [submittingNote, setSubmittingNote] = useState(false);
 
+  // Interview Schedule Modal State
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [scheduling, setScheduling] = useState(false);
+  const [scheduleForm, setScheduleForm] = useState({
+    title: "",
+    interviewType: "TECHNICAL",
+    mode: "VIDEO",
+    scheduledAt: "",
+    durationMinutes: 45,
+    meetingLink: "",
+    notes: "",
+  });
+
+  const handleScheduleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!activeApp || !scheduleForm.scheduledAt) return;
+    setScheduling(true);
+    try {
+      const res = await fetch(`/api/employer/applications/${activeApp.id}/interviews`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(scheduleForm),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        alert("Interview scheduled & notification sent to candidate!");
+        setShowScheduleModal(false);
+        setActiveApp(null);
+        fetchApplications();
+      } else {
+        alert(data.error || "Failed to schedule interview.");
+      }
+    } catch (err: any) {
+      console.error("Schedule interview error:", err);
+      alert("Error scheduling interview.");
+    } finally {
+      setScheduling(false);
+    }
+  };
+
   const fetchTimeline = (appId: string) => {
     setLoadingTimeline(true);
     fetch(`/api/employer/applications/${appId}/timeline`)
@@ -523,12 +563,25 @@ export default function EmployerApplicationsPage() {
             {/* Quick Actions in Modal */}
             <div className="border-t border-slate-100 pt-4 flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
-                <Link
-                  href={`/employer/interviews?candidateName=${encodeURIComponent(activeApp.candidateName)}&candidateEmail=${encodeURIComponent(activeApp.candidateEmail)}&jobTitle=${encodeURIComponent(activeApp.job.title)}&appId=${activeApp.id}`}
-                  className="rounded-xl bg-amber-500 px-3.5 py-2 text-xs font-bold text-white hover:bg-amber-600 transition flex items-center gap-1.5 shadow-2xs"
+                <button
+                  type="button"
+                  onClick={() => {
+                    const defaultDate = new Date(Date.now() + 86400000 * 2).toISOString().slice(0, 16);
+                    setScheduleForm({
+                      title: `Technical Interview - ${activeApp.candidateName}`,
+                      interviewType: "TECHNICAL",
+                      mode: "VIDEO",
+                      scheduledAt: defaultDate,
+                      durationMinutes: 45,
+                      meetingLink: "https://meet.google.com/careerbridge-interview",
+                      notes: "",
+                    });
+                    setShowScheduleModal(true);
+                  }}
+                  className="rounded-xl bg-amber-500 px-3.5 py-2 text-xs font-bold text-white hover:bg-amber-600 transition flex items-center gap-1.5 shadow-2xs cursor-pointer"
                 >
                   <Calendar size={13} /> Schedule Interview
-                </Link>
+                </button>
 
                 <Link
                   href="/employer/assessments"
@@ -552,6 +605,149 @@ export default function EmployerApplicationsPage() {
                 Close
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* SCHEDULE INTERVIEW MODAL */}
+      {showScheduleModal && activeApp && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+          <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl space-y-5">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <h3 className="font-display text-base font-bold text-slate-900 flex items-center gap-2">
+                  <Calendar size={18} className="text-amber-500" />
+                  Schedule Interview Round
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Applicant: <strong>{activeApp.candidateName}</strong> ({activeApp.job.title})
+                </p>
+              </div>
+              <button
+                onClick={() => setShowScheduleModal(false)}
+                className="text-slate-400 hover:text-slate-600 p-1"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleScheduleSubmit} className="space-y-4 text-xs">
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">Round Title</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Technical Round - System Design"
+                  value={scheduleForm.title}
+                  onChange={(e) => setScheduleForm({ ...scheduleForm, title: e.target.value })}
+                  className="w-full rounded-xl border border-slate-300 p-2.5 text-xs focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Interview Type</label>
+                  <select
+                    value={scheduleForm.interviewType}
+                    onChange={(e) => setScheduleForm({ ...scheduleForm, interviewType: e.target.value })}
+                    className="w-full rounded-xl border border-slate-300 p-2.5 text-xs"
+                  >
+                    <option value="TECHNICAL">Technical Round</option>
+                    <option value="HR">HR / Culture Screen</option>
+                    <option value="MANAGERIAL">Managerial / Leadership</option>
+                    <option value="FINAL">Final Executive Round</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Format / Mode</label>
+                  <select
+                    value={scheduleForm.mode}
+                    onChange={(e) => setScheduleForm({ ...scheduleForm, mode: e.target.value as any })}
+                    className="w-full rounded-xl border border-slate-300 p-2.5 text-xs"
+                  >
+                    <option value="VIDEO">Google Meet / Video Call</option>
+                    <option value="PHONE">Phone Call</option>
+                    <option value="IN_PERSON">In-Person at Office</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Date & Time</label>
+                  <input
+                    type="datetime-local"
+                    required
+                    value={scheduleForm.scheduledAt}
+                    onChange={(e) => setScheduleForm({ ...scheduleForm, scheduledAt: e.target.value })}
+                    className="w-full rounded-xl border border-slate-300 p-2.5 text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Duration (Minutes)</label>
+                  <select
+                    value={scheduleForm.durationMinutes}
+                    onChange={(e) => setScheduleForm({ ...scheduleForm, durationMinutes: Number(e.target.value) })}
+                    className="w-full rounded-xl border border-slate-300 p-2.5 text-xs"
+                  >
+                    <option value={30}>30 mins</option>
+                    <option value={45}>45 mins</option>
+                    <option value={60}>60 mins</option>
+                    <option value={90}>90 mins</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  {scheduleForm.mode === "VIDEO" ? "Meeting URL / Link" : scheduleForm.mode === "PHONE" ? "Phone Contact Number" : "Office Location Address"}
+                </label>
+                <input
+                  type="text"
+                  placeholder={
+                    scheduleForm.mode === "VIDEO"
+                      ? "https://meet.google.com/xyz-abc-123"
+                      : scheduleForm.mode === "PHONE"
+                      ? "+91 98765 43210"
+                      : "Floor 4, Bluepeak Tech Park, Bengaluru"
+                  }
+                  value={scheduleForm.meetingLink}
+                  onChange={(e) => setScheduleForm({ ...scheduleForm, meetingLink: e.target.value })}
+                  className="w-full rounded-xl border border-slate-300 p-2.5 text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">Notes / Preparation Instructions for Candidate</label>
+                <textarea
+                  rows={3}
+                  placeholder="Please keep your resume and laptop ready with code editor installed..."
+                  value={scheduleForm.notes}
+                  onChange={(e) => setScheduleForm({ ...scheduleForm, notes: e.target.value })}
+                  className="w-full rounded-xl border border-slate-300 p-2.5 text-xs"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
+                <button
+                  type="button"
+                  onClick={() => setShowScheduleModal(false)}
+                  className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 transition"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={scheduling}
+                  className="rounded-xl bg-blue-600 px-5 py-2 text-xs font-bold text-white hover:bg-blue-700 transition disabled:opacity-50"
+                >
+                  {scheduling ? "Scheduling & Sending Email..." : "Confirm & Send Notification"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
