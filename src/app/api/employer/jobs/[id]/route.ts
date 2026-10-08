@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireEmployer } from "@/lib/employer/auth";
-import { UserRole } from "@prisma/client";
+import { UserRole, JobStatus } from "@prisma/client";
 import { recordAuditLog } from "@/lib/admin/audit";
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
@@ -92,7 +92,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         ...(salaryMinLpa !== undefined && { salaryMinLpa: parseInt(salaryMinLpa) }),
         ...(salaryMaxLpa !== undefined && { salaryMaxLpa: parseInt(salaryMaxLpa) }),
         ...(department && { department }),
-        ...(status && { status }),
+        ...(status && {
+          // If employer requests to publish, route through Admin Moderation Approval
+          status: status === "PUBLISHED" ? JobStatus.PENDING_REVIEW : (status as JobStatus),
+        }),
         ...(pipelineId !== undefined && { pipelineId }),
         lastActivityAt: new Date(),
       },

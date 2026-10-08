@@ -150,13 +150,13 @@ export default function EmployerJobsPage() {
                   <span
                     className={`rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
                       job.status === "PUBLISHED"
-                        ? "bg-emerald-50 text-emerald-700"
+                        ? "bg-emerald-50 text-emerald-700 border border-emerald-200/80"
                         : job.status === "PENDING_REVIEW"
-                        ? "bg-amber-50 text-amber-700"
+                        ? "bg-amber-50 text-amber-800 border border-amber-200/80"
                         : "bg-slate-100 text-slate-600"
                     }`}
                   >
-                    {job.status.replace("_", " ")}
+                    {job.status === "PENDING_REVIEW" ? "Awaiting Admin Review" : job.status.replace("_", " ")}
                   </span>
                 </div>
 
@@ -225,14 +225,21 @@ export default function EmployerJobsPage() {
                     >
                       Pause
                     </button>
+                  ) : job.status === "PENDING_REVIEW" ? (
+                    <span
+                      className="rounded-xl border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-[11px] font-bold text-amber-800 flex items-center gap-1 shrink-0"
+                      title="Submitted to JobsGuru Admin for review and approval"
+                    >
+                      <Clock size={12} /> Awaiting Admin Approval
+                    </span>
                   ) : (
                     <button
                       type="button"
-                      onClick={() => handleUpdateStatus(job.id, "PUBLISHED")}
-                      className="rounded-xl border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-[11px] font-bold text-emerald-700 hover:bg-emerald-100 transition"
-                      title="Publish and accept applications"
+                      onClick={() => handleUpdateStatus(job.id, "PENDING_REVIEW")}
+                      className="rounded-xl border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-[11px] font-bold text-blue-700 hover:bg-blue-100 transition"
+                      title="Submit job requisition to JobsGuru Admin for moderation approval"
                     >
-                      Publish
+                      Submit for Review
                     </button>
                   )}
 

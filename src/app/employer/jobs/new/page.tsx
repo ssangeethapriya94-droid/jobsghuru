@@ -655,15 +655,20 @@ export default function NewJobWizard() {
                   </div>
                 </div>
               ) : (
-                <button
-                  type="button"
-                  onClick={handlePublish}
-                  disabled={loading}
-                  className="w-full rounded-xl bg-blue-600 py-3.5 text-xs font-bold text-white shadow-xs hover:bg-blue-700 active:scale-98 transition flex items-center justify-center gap-2 disabled:opacity-50"
-                >
-                  {loading ? "Publishing Requisition..." : "Confirm & Publish Job"}
-                  <Send size={14} />
-                </button>
+                <div className="space-y-2">
+                  <button
+                    type="button"
+                    onClick={handlePublish}
+                    disabled={loading}
+                    className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 py-3.5 text-xs font-bold text-white shadow-md shadow-blue-500/25 hover:from-blue-700 hover:to-indigo-700 active:scale-98 transition flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+                  >
+                    {loading ? "Submitting Requisition..." : "Submit Job for Admin Review"}
+                    <Send size={14} />
+                  </button>
+                  <p className="text-[11px] text-center text-slate-500 font-medium">
+                    🛡️ Your job requisition will be sent to JobsGuru Admin for review. Once approved, it will be published live on the platform.
+                  </p>
+                </div>
               )}
             </div>
           </div>

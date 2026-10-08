@@ -128,7 +128,8 @@ export async function POST(req: NextRequest) {
         description,
         responsibilities: Array.isArray(responsibilities) ? responsibilities : ["Deliver high-quality features", "Collaborate with cross-functional leads"],
         requirements: Array.isArray(requirements) ? requirements : [`${minExp || 2}+ years relevant experience`],
-        status: (status as JobStatus) || "PUBLISHED",
+        // All employer-submitted jobs require Admin Moderation approval before publication
+        status: status === "DRAFT" ? JobStatus.DRAFT : JobStatus.PENDING_REVIEW,
         companyId: employer.companyId,
         expiresAt: new Date(Date.now() + 30 * 86400000), // 30-day listing
         responseRatePct: 85,
@@ -153,7 +154,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       job: newJob,
-      message: "Job created and published successfully.",
+      message: newJob.status === "PENDING_REVIEW" 
+        ? "Job created and submitted to JobsGuru Admin for review and approval."
+        : "Job draft saved successfully.",
     });
   } catch (error: any) {
     console.error("Error creating job:", error);
