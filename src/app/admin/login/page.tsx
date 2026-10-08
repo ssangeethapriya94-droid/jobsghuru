@@ -108,6 +108,7 @@ export default function AdminLoginPage() {
                 src="/images/auth/admin_clean.jpg"
                 alt="Modern Architecture Executive Hub"
                 fill
+                sizes="(max-width: 768px) 100vw, 280px"
                 className="object-cover object-center"
                 priority
               />
