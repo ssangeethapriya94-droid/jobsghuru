@@ -86,16 +86,16 @@ export default function NaukriStyleEmployerHero() {
       {/* ========================================================================= */}
       {/* 1. HERO SECTION: VASTLY SUPERIOR TO NAUKRI RECRUITER (FULL-WIDTH LUXURY)  */}
       {/* ========================================================================= */}
-      <section className="relative overflow-hidden border-b border-slate-200/90 py-14 lg:py-24">
-        {/* Full Hero Background Image with Gradient Overlay */}
+      <section className="relative overflow-hidden border-b border-slate-200/90 py-14 lg:py-24 bg-slate-100">
+        {/* Full Hero Background Image with Crisp Overlay */}
         <div className="absolute inset-0 -z-10 pointer-events-none">
           <img
             src="/images/employer_hero_banner.png"
             alt="Jobsghuru Tech Talent"
-            className="w-full h-full object-cover object-center opacity-25 mix-blend-multiply"
+            className="w-full h-full object-cover object-center opacity-70"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-50/95 via-slate-50/85 to-slate-50/60" />
-          <div className="absolute inset-0 bg-gradient-to-b from-blue-950/5 via-transparent to-white" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-50/90 via-slate-50/70 to-slate-50/40" />
+          <div className="absolute inset-0 bg-gradient-to-b from-blue-950/10 via-transparent to-slate-50/60" />
         </div>
 
         {/* Subtle decorative glow circles */}
