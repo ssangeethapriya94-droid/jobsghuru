@@ -1,15 +1,70 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Bell, Menu, X, Sparkles } from "lucide-react";
-import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { Bell, Menu, X, Sparkles, User, LayoutDashboard, Briefcase, LogOut, ChevronDown, CheckCircle2 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 
 import EmployerHeader from "@/components/employer/EmployerHeader";
 
 export default function Header() {
   const pathname = usePathname();
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [candidateUser, setCandidateUser] = useState<{
+    id: string;
+    name: string;
+    email: string;
+    avatar?: string | null;
+  } | null>(null);
+
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function fetchCandidateSession() {
+      try {
+        const res = await fetch("/api/candidate/auth/me", { cache: "no-store" });
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted && data.success && data.candidate) {
+            setCandidateUser(data.candidate);
+          }
+        }
+      } catch (err) {
+        // Unauthenticated
+      }
+    }
+    fetchCandidateSession();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [pathname]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setProfileDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/candidate/auth/logout", { method: "POST" });
+    } catch {
+      // ignore
+    }
+    setCandidateUser(null);
+    setProfileDropdownOpen(false);
+    router.push("/login");
+    router.refresh();
+  };
 
   if (pathname?.startsWith("/admin") || pathname?.startsWith("/employer/")) {
     return null;
@@ -33,6 +88,11 @@ export default function Header() {
     { label: "Career Tools", href: "/career", active: pathname.startsWith("/career") },
     { label: "Salary Insights", href: "/salary", active: pathname.startsWith("/salary") },
   ];
+
+  // Calculate First Letter of Candidate Name or Email
+  const firstLetter = candidateUser
+    ? (candidateUser.name || candidateUser.email || "U").trim().charAt(0).toUpperCase()
+    : "U";
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200/90 bg-white/95 backdrop-blur-md shadow-xs">
@@ -70,7 +130,7 @@ export default function Header() {
           </span>
         </Link>
 
-        {/* Desktop Nav - Clear, larger font size (text-base) */}
+        {/* Desktop Nav - Clear, larger font size */}
         <nav aria-label="Main" className="hidden lg:flex items-center gap-6 xl:gap-8 text-base font-bold text-slate-700">
           {navLinks.map((item) => (
             <Link
@@ -95,14 +155,17 @@ export default function Header() {
           ))}
         </nav>
 
-        {/* Desktop Action Buttons - Spaced & High Visibility */}
+        {/* Desktop Action Buttons / Profile Avatar */}
         <div className="hidden lg:flex items-center gap-3.5 xl:gap-4 shrink-0">
           <Link
             href="/candidate/notifications"
-            className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition"
+            className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition relative"
             aria-label="Notifications"
           >
             <Bell size={20} />
+            {candidateUser && (
+              <span className="absolute top-1 right-1 h-2.5 w-2.5 rounded-full bg-blue-600 ring-2 ring-white" />
+            )}
           </Link>
 
           <Link
@@ -116,24 +179,92 @@ export default function Header() {
             For Employers
           </Link>
 
-          <Link
-            href="/login"
-            className={`rounded-xl border border-slate-300 bg-white px-4.5 py-2.5 text-sm font-bold text-slate-800 shadow-2xs hover:border-blue-600 hover:text-blue-600 hover:bg-blue-50/50 transition ${
-              pathname === "/login" ? "border-blue-600 text-blue-600 font-extrabold bg-blue-50" : ""
-            }`}
-          >
-            Log in
-          </Link>
+          {candidateUser ? (
+            /* Logged In User Profile Avatar with First Letter */
+            <div className="relative" ref={dropdownRef}>
+              <button
+                type="button"
+                onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                className="flex items-center gap-2.5 rounded-2xl border border-slate-200 bg-slate-50/80 p-1.5 pr-3 hover:bg-slate-100 transition shadow-xs group"
+              >
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-extrabold text-base shadow-xs group-hover:scale-105 transition">
+                  {firstLetter}
+                </div>
+                <div className="text-left text-xs leading-tight">
+                  <div className="font-extrabold text-slate-900 truncate max-w-[110px]">
+                    {candidateUser.name || candidateUser.email.split("@")[0]}
+                  </div>
+                  <div className="text-[10px] text-emerald-600 font-semibold flex items-center gap-0.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                    <span>Candidate</span>
+                  </div>
+                </div>
+                <ChevronDown size={14} className="text-slate-400 group-hover:text-slate-600 transition" />
+              </button>
 
-          <Link
-            href="/signup"
-            className="relative group rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-extrabold text-white shadow-md shadow-blue-600/20 transition hover:bg-blue-700 active:scale-98 whitespace-nowrap overflow-hidden"
-          >
-            <span className="relative z-10 flex items-center gap-1.5">
-              <span>Sign up</span>
-              <span className="inline-block h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
-            </span>
-          </Link>
+              {/* Profile Dropdown Menu */}
+              {profileDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                  <div className="p-3 border-b border-slate-100 text-xs">
+                    <div className="font-extrabold text-slate-900">{candidateUser.name}</div>
+                    <div className="text-[11px] text-slate-500 truncate mt-0.5">{candidateUser.email}</div>
+                  </div>
+
+                  <div className="py-1.5 space-y-1 text-xs font-semibold text-slate-700">
+                    <Link
+                      href="/candidate/dashboard"
+                      onClick={() => setProfileDropdownOpen(false)}
+                      className="flex items-center gap-2.5 rounded-xl px-3 py-2 hover:bg-slate-50 hover:text-blue-600 transition"
+                    >
+                      <LayoutDashboard size={15} className="text-blue-600" />
+                      <span>My Dashboard</span>
+                    </Link>
+                    <Link
+                      href="/candidate/applications"
+                      onClick={() => setProfileDropdownOpen(false)}
+                      className="flex items-center gap-2.5 rounded-xl px-3 py-2 hover:bg-slate-50 hover:text-blue-600 transition"
+                    >
+                      <Briefcase size={15} className="text-blue-600" />
+                      <span>My Applications</span>
+                    </Link>
+                  </div>
+
+                  <div className="pt-1.5 border-t border-slate-100">
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 transition"
+                    >
+                      <LogOut size={15} />
+                      <span>Sign Out</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            /* Unauthenticated Log in / Sign up Buttons */
+            <>
+              <Link
+                href="/login"
+                className={`rounded-xl border border-slate-300 bg-white px-4.5 py-2.5 text-sm font-bold text-slate-800 shadow-2xs hover:border-blue-600 hover:text-blue-600 hover:bg-blue-50/50 transition ${
+                  pathname === "/login" ? "border-blue-600 text-blue-600 font-extrabold bg-blue-50" : ""
+                }`}
+              >
+                Log in
+              </Link>
+
+              <Link
+                href="/signup"
+                className="relative group rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-extrabold text-white shadow-md shadow-blue-600/20 transition hover:bg-blue-700 active:scale-98 whitespace-nowrap overflow-hidden"
+              >
+                <span className="relative z-10 flex items-center gap-1.5">
+                  <span>Sign up</span>
+                  <span className="inline-block h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
+                </span>
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile / Tablet Menu Button */}
@@ -150,6 +281,18 @@ export default function Header() {
       {/* Mobile / Tablet Navigation Drawer */}
       {mobileMenuOpen && (
         <div className="lg:hidden border-t border-slate-200 bg-white p-5 space-y-3 shadow-2xl animate-in slide-in-from-top duration-200">
+          {candidateUser && (
+            <div className="flex items-center gap-3 p-3 rounded-2xl bg-blue-50/70 border border-blue-100 text-xs mb-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white font-extrabold text-base">
+                {firstLetter}
+              </div>
+              <div>
+                <div className="font-extrabold text-slate-900">{candidateUser.name}</div>
+                <div className="text-slate-500 text-[11px] truncate">{candidateUser.email}</div>
+              </div>
+            </div>
+          )}
+
           <div className="space-y-1">
             {navLinks.map((link) => (
               <Link
@@ -172,31 +315,44 @@ export default function Header() {
             ))}
           </div>
 
-          <div className="pt-3 border-t border-slate-100 flex flex-col gap-2.5">
-            <Link
-              href="/employers"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center justify-center rounded-xl border border-slate-200 bg-slate-50 py-3 text-sm font-bold text-slate-800 hover:bg-slate-100 transition"
-            >
-              For Employers
-            </Link>
-
-            <div className="grid grid-cols-2 gap-2.5">
-              <Link
-                href="/login"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center justify-center rounded-xl border border-slate-300 bg-white py-3 text-sm font-bold text-slate-800 hover:bg-slate-50 transition"
-              >
-                Log in
-              </Link>
-              <Link
-                href="/signup"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center justify-center rounded-xl bg-blue-600 py-3 text-sm font-extrabold text-white hover:bg-blue-700 shadow-md transition"
-              >
-                Sign up
-              </Link>
-            </div>
+          <div className="pt-3 border-t border-slate-200 space-y-2">
+            {candidateUser ? (
+              <>
+                <Link
+                  href="/candidate/dashboard"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3 text-sm font-extrabold text-white shadow-xs"
+                >
+                  <LayoutDashboard size={16} />
+                  <span>My Candidate Dashboard</span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 py-3 text-sm font-bold text-rose-600"
+                >
+                  <LogOut size={16} />
+                  <span>Sign Out</span>
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block w-full rounded-xl border border-slate-300 bg-white py-3 text-center text-sm font-bold text-slate-800 shadow-2xs"
+                >
+                  Log in
+                </Link>
+                <Link
+                  href="/signup"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block w-full rounded-xl bg-blue-600 py-3 text-center text-sm font-extrabold text-white shadow-md"
+                >
+                  Sign up
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}
