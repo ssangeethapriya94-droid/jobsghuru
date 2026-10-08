@@ -139,29 +139,6 @@ export default function NaukriStyleEmployerHero() {
                 </div>
               </div>
 
-              {/* Hero Platform Showcase Candidate Image Card */}
-              <div className="relative rounded-3xl border border-blue-200/80 bg-gradient-to-br from-blue-50/60 via-white to-slate-50 p-2 sm:p-3 shadow-lg hover:shadow-2xl transition duration-300 overflow-hidden group">
-                {/* Top-Right Floating AI READY Badge */}
-                <div className="absolute top-5 right-5 z-20 flex h-12 w-12 items-center justify-center rounded-full bg-amber-400 border-2 border-white text-slate-950 shadow-lg font-black text-[10px] leading-tight text-center tracking-tighter uppercase transform rotate-6 group-hover:scale-110 transition duration-200">
-                  AI<br/>READY
-                </div>
-
-                <img
-                  src="/images/employer_hero_banner.png"
-                  alt="JobsGhuru Verified Tech Candidates"
-                  className="w-full h-auto rounded-2xl object-cover shadow-2xs border border-slate-100/80"
-                />
-
-                {/* Bottom-Left Floating Skill Badge */}
-                <div className="absolute bottom-5 left-5 z-20 rounded-2xl bg-white/95 backdrop-blur-md border border-slate-200/90 px-4 py-2.5 shadow-xl text-slate-900 flex items-center gap-2">
-                  <span className="flex h-2.5 w-2.5 rounded-full bg-blue-600 animate-pulse" />
-                  <div>
-                    <span className="text-xs font-extrabold block text-slate-900">Career-ready digital skills</span>
-                    <span className="text-[11px] font-bold text-blue-700">Start with curiosity.</span>
-                  </div>
-                </div>
-              </div>
-
               {/* Interactive Talent Radar / Live Talent Pulse */}
               <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
