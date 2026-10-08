@@ -69,40 +69,6 @@ export default function Footer() {
       <div className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 h-72 w-full max-w-7xl rounded-full bg-blue-600/10 blur-[120px]" />
 
       <div className="container-x relative pt-12 pb-10 lg:pt-16 lg:pb-12">
-        {/* Top Newsletter & AI Alert Box */}
-        <div className="mb-12 rounded-3xl border border-blue-500/20 bg-gradient-to-r from-blue-950/40 via-indigo-950/30 to-slate-900/60 p-6 sm:p-8 backdrop-blur-md shadow-2xl flex flex-col lg:flex-row items-center justify-between gap-6">
-          <div className="space-y-1.5 text-center lg:text-left">
-            <div className="inline-flex items-center gap-2 text-xs font-bold text-blue-400 bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20">
-              <Sparkles size={14} className="text-blue-400" />
-              <span>Smart AI Job Alert Digest</span>
-            </div>
-            <h3 className="font-display text-xl sm:text-2xl font-extrabold text-white tracking-tight">
-              Get matched jobs delivered directly to your inbox.
-            </h3>
-            <p className="text-xs text-slate-400 max-w-xl font-medium">
-              Subscribe to verified role notifications matching your salary target and tech stack. No spam, guaranteed.
-            </p>
-          </div>
-
-          <form onSubmit={(e) => e.preventDefault()} className="flex items-center gap-2 w-full sm:w-auto min-w-[300px]">
-            <div className="relative flex-1">
-              <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                type="email"
-                placeholder="Enter your email address..."
-                className="w-full rounded-2xl border border-slate-700 bg-slate-900/90 pl-10 pr-4 py-3 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition"
-              />
-            </div>
-            <button
-              type="submit"
-              className="rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 px-5 py-3 text-xs font-extrabold text-white shadow-md shadow-blue-500/25 transition-all active:scale-95 shrink-0 flex items-center gap-1.5 cursor-pointer"
-            >
-              <span>Subscribe</span>
-              <Send size={13} />
-            </button>
-          </form>
-        </div>
-
         {/* Directory Grid */}
         <div className="grid grid-cols-2 md:grid-cols-6 gap-8 lg:gap-12 pb-12 border-b border-slate-800/80">
           {/* Brand Info (Col 1 & 2) */}
