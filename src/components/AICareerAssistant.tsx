@@ -136,17 +136,19 @@ export default function AICareerAssistant({
       });
 
       const data = await res.json();
-      if (data.success) {
+      if (data.success && data.response) {
         setResponse(data.response);
         setExtractedSkills(data.extractedSkills || []);
         setExtractedExp(data.extractedExp || null);
         setDetectedRole(data.detectedRole || null);
         setQuery(`Resume Matched: ${file.name}`);
       } else {
-        alert(data.error || "Failed to analyze resume.");
+        console.warn("Resume parsing returned non-success, falling back to standard AI search:", data);
+        handleAskAI("Find developer jobs matching my profile");
       }
     } catch (err) {
       console.error("Resume analysis failed:", err);
+      handleAskAI("Find developer jobs matching my profile");
     } finally {
       setIsUploadingResume(false);
       setLoading(false);

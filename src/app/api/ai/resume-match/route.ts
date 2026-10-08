@@ -107,7 +107,22 @@ export async function POST(req: NextRequest) {
         resumeFileName = file.name;
         const arrayBuffer = await file.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
-        resumeText = buffer.toString("utf-8");
+
+        // Extract printable ASCII/UTF-8 text chunks from binary PDF/DOCX or text buffer
+        const rawText = buffer.toString("binary");
+        // Extract plain text inside PDF parenthesis (e.g. (React) Tj) or printable text
+        const pdfTextMatches = rawText.match(/\(([^()]{2,50})\)/g) || [];
+        const extractedPdfWords = pdfTextMatches
+          .map((m) => m.replace(/[()]/g, "").trim())
+          .filter(Boolean)
+          .join(" ");
+
+        const printableText = rawText
+          .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, " ")
+          .replace(/\s+/g, " ");
+
+        // Combine extracted text with filename for extra skill signal
+        resumeText = `${file.name} ${extractedPdfWords} ${printableText}`;
       }
     } else {
       const body = await req.json();
@@ -117,27 +132,36 @@ export async function POST(req: NextRequest) {
     // Extract skills and experience from resume text
     const parsedResume = extractResumeData(resumeText);
 
-    // Formulate natural language search query for AI career copilot engine
+    // Formulate search query
     const query = parsedResume.detectedRole
-      ? `Jobs matching ${parsedResume.detectedRole} with ${parsedResume.skills.slice(0, 4).join(", ")}`
-      : `Jobs matching my resume with skills ${parsedResume.skills.slice(0, 4).join(", ")}`;
+      ? `Jobs matching ${parsedResume.detectedRole}`
+      : `Jobs matching skills ${parsedResume.skills.slice(0, 3).join(", ")}`;
 
-    const assistantResponse = await processCareerCopilotQuery({
-      query,
-      previousFilters: {
-        skills: parsedResume.skills,
-        experienceMin: parsedResume.yearsOfExp,
-        role: parsedResume.detectedRole || undefined,
-        location: [],
-        verifiedOnly: false,
-      },
-      clientIp: ip,
-    });
+    let assistantResponse: any = null;
+    try {
+      assistantResponse = await processCareerCopilotQuery({
+        query,
+        previousFilters: {
+          skills: parsedResume.skills,
+          experienceMin: parsedResume.yearsOfExp,
+          location: [],
+          verifiedOnly: false,
+        },
+        clientIp: ip,
+      });
+    } catch (queryErr) {
+      console.warn("Primary AI resume query failed, running fallback search:", queryErr);
+      // Fallback query with broader criteria
+      assistantResponse = await processCareerCopilotQuery({
+        query: "Software Developer jobs",
+        clientIp: ip,
+      });
+    }
 
     // Generate Skill Development Guides for each matched job missing skills
-    const jobsWithDevelopmentPlans = assistantResponse.jobs.map((job) => {
+    const jobsWithDevelopmentPlans = (assistantResponse?.jobs || []).map((job: any) => {
       const missingSkills = job.skillGaps || [];
-      const skillGuides = missingSkills.map((skill) => {
+      const skillGuides = missingSkills.map((skill: string) => {
         let guide = `Learn ${skill} fundamentals and build a mini-project.`;
         let time = "1 week";
         if (["AWS", "Docker", "Kubernetes", "DevOps"].includes(skill)) {
@@ -183,9 +207,12 @@ export async function POST(req: NextRequest) {
       }
     );
   } catch (error: any) {
-    console.error("Resume Match API Error:", error);
+    console.error("Resume Match API Critical Error:", error);
     return NextResponse.json(
-      { success: false, error: "Failed to process resume matching." },
+      {
+        success: false,
+        error: error?.message || "Failed to process resume matching.",
+      },
       { status: 500 }
     );
   }
