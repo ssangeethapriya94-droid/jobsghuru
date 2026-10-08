@@ -87,23 +87,6 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Live Stats Bar */}
-      <StatsBanner
-        totalJobs={totalJobs}
-        totalCompanies={totalCompanies}
-        avgResponseRate={avgResponseRate}
-        highestSalary={highestSalary || 32}
-      />
-
-      {/* Category Grid Section */}
-      <CategoryGrid counts={departmentCounts} />
-
-      {/* Explore Jobs by Location / City Hub */}
-      <LocationExplorer />
-
-      {/* Live Interactive Job Feed on Homepage */}
-      <LiveJobFeed jobs={jobs} />
-
       {/* Promises / Trust Section */}
       <PromisesSection />
 
