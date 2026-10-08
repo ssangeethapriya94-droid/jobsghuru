@@ -86,23 +86,24 @@ export default function NaukriStyleEmployerHero() {
       {/* ========================================================================= */}
       {/* 1. HERO SECTION: VASTLY SUPERIOR TO NAUKRI RECRUITER (FULL-WIDTH LUXURY)  */}
       {/* ========================================================================= */}
-      <section className="relative overflow-hidden border-b border-slate-200/90 py-14 lg:py-24 bg-slate-100">
-        {/* Full Hero Background Image with Crisp Overlay */}
-        <div className="absolute inset-0 -z-10 pointer-events-none">
+      <section className="relative overflow-hidden border-b border-slate-200/90 py-14 lg:py-24 bg-slate-50">
+        {/* Full Hero Background Image with Proper Stacking Context (z-0) */}
+        <div className="absolute inset-0 z-0 pointer-events-none">
           <img
             src="/images/employer_hero_banner.png"
             alt="Jobsghuru Tech Talent"
-            className="w-full h-full object-cover object-center opacity-70"
+            className="w-full h-full object-cover object-right lg:object-center opacity-70"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-50/90 via-slate-50/70 to-slate-50/40" />
-          <div className="absolute inset-0 bg-gradient-to-b from-blue-950/10 via-transparent to-slate-50/60" />
+          {/* Soft Left Gradient Fade to keep text on left readable while making image on right visible */}
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-50 via-slate-50/85 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-b from-blue-950/5 via-transparent to-slate-50/80" />
         </div>
 
         {/* Subtle decorative glow circles */}
-        <div className="absolute top-0 left-1/4 -z-10 h-[500px] w-[500px] rounded-full bg-blue-400/10 blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 right-10 -z-10 h-[400px] w-[400px] rounded-full bg-indigo-400/10 blur-3xl pointer-events-none" />
+        <div className="absolute top-0 left-1/4 z-0 h-[500px] w-[500px] rounded-full bg-blue-400/10 blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 right-10 z-0 h-[400px] w-[400px] rounded-full bg-indigo-400/10 blur-3xl pointer-events-none" />
 
-        <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
+        <div className="relative z-10 w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
             {/* Left Column: Value Proposition & Interactive Talent Pulse */}
             <div className="lg:col-span-7 space-y-7">
