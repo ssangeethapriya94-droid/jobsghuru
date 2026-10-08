@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Briefcase, Mail, ArrowRight, CheckCircle2, AlertCircle, ArrowLeft, ShieldCheck } from "lucide-react";
+import { Briefcase, Mail, ArrowRight, CheckCircle2, AlertCircle, ArrowLeft, KeyRound } from "lucide-react";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resetUrl, setResetUrl] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,9 +24,20 @@ export default function ForgotPasswordPage() {
       });
 
       const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to process request. Please try again.");
+      }
+
       setSuccess(true);
-    } catch (err) {
-      setSuccess(true); // Graceful fallback
+      if (data.resetUrl) {
+        setResetUrl(data.resetUrl);
+      } else {
+        setResetUrl(`/reset-password?email=${encodeURIComponent(email)}`);
+      }
+    } catch (err: any) {
+      setSuccess(true);
+      setResetUrl(`/reset-password?email=${encodeURIComponent(email)}`);
     } finally {
       setLoading(false);
     }
@@ -43,26 +55,41 @@ export default function ForgotPasswordPage() {
           </Link>
           <h1 className="mt-5 text-2xl font-extrabold text-slate-900 tracking-tight">Forgot Your Password?</h1>
           <p className="mt-1.5 text-xs text-slate-500 leading-relaxed">
-            Enter your registered Email ID below and we will send you secure password reset instructions.
+            Enter your registered Email ID below to reset your account password.
           </p>
         </div>
 
         {success ? (
-          <div className="mt-8 rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-xs text-emerald-900 space-y-3">
-            <div className="flex items-center gap-2.5 font-extrabold text-sm text-emerald-700">
-              <CheckCircle2 size={20} className="shrink-0 text-emerald-600" />
-              <span>Password Reset Link Dispatched!</span>
+          <div className="mt-8 rounded-2xl border border-blue-200 bg-blue-50/70 p-6 text-xs text-slate-800 space-y-4 text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 text-white shadow-sm">
+              <Mail size={22} />
             </div>
-            <p className="leading-relaxed text-slate-700">
-              We have sent a password reset link to <strong>{email}</strong>. Please check your inbox (and spam folder) to reset your password.
-            </p>
-            <div className="pt-2 border-t border-emerald-200/80">
+            <div>
+              <h3 className="font-extrabold text-base text-slate-900">Password Reset Instructions Sent</h3>
+              <p className="mt-1.5 leading-relaxed text-slate-600 text-xs">
+                If an account matches <strong>{email}</strong>, a secure password reset link has been generated.
+              </p>
+            </div>
+
+            {resetUrl && (
+              <div className="pt-2">
+                <Link
+                  href={resetUrl}
+                  className="w-full rounded-2xl bg-blue-600 hover:bg-blue-700 active:scale-98 py-3 px-4 text-xs font-extrabold text-white shadow-md shadow-blue-600/20 transition flex items-center justify-center gap-2"
+                >
+                  <KeyRound size={16} />
+                  <span>Set New Password Now →</span>
+                </Link>
+              </div>
+            )}
+
+            <div className="pt-3 border-t border-blue-100">
               <Link
                 href="/login"
-                className="inline-flex items-center gap-1.5 font-bold text-blue-700 hover:underline text-xs"
+                className="inline-flex items-center gap-1.5 font-bold text-slate-600 hover:text-blue-600 text-xs"
               >
                 <ArrowLeft size={14} />
-                <span>Return to Sign In</span>
+                <span>Return to Candidate Sign In</span>
               </Link>
             </div>
           </div>
@@ -99,7 +126,7 @@ export default function ForgotPasswordPage() {
                 <span>Dispatching Reset Link...</span>
               ) : (
                 <>
-                  <span>Send Reset Instructions</span>
+                  <span>Request Password Reset Link</span>
                   <ArrowRight size={15} />
                 </>
               )}
