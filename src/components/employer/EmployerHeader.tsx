@@ -127,7 +127,7 @@ export default function EmployerHeader() {
           </Link>
 
           {/* Desktop Nav */}
-          <nav className="hidden items-center gap-6 text-base font-bold text-slate-700 lg:flex">
+          <nav className="hidden items-center gap-7 text-sm sm:text-base font-bold text-slate-800 lg:flex">
             {/* Our Offerings Mega Dropdown (Naukri Screenshot 4 Equivalent) */}
             <div
               className="relative"
@@ -136,15 +136,15 @@ export default function EmployerHeader() {
             >
               <button
                 type="button"
-                className={`flex items-center gap-1.5 py-1 text-xs font-bold transition hover:text-slate-900 ${
-                  offeringsOpen ? "text-blue-600" : ""
+                className={`flex items-center gap-1.5 py-2 text-sm sm:text-base font-bold transition hover:text-blue-600 ${
+                  offeringsOpen ? "text-blue-600" : "text-slate-800"
                 }`}
               >
-                Our Offerings <ChevronDown size={14} className={`transition duration-200 ${offeringsOpen ? "rotate-180 text-blue-600" : ""}`} />
+                Our Offerings <ChevronDown size={16} className={`transition duration-200 ${offeringsOpen ? "rotate-180 text-blue-600" : ""}`} />
               </button>
 
               {offeringsOpen && (
-                <div className="absolute left-0 top-full pt-2 w-[540px]">
+                <div className="absolute left-0 top-full pt-2 w-[560px]">
                   <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl grid grid-cols-12 gap-5">
                     {/* Left Card: Free Job Posting highlight */}
                     <div className="col-span-5 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50/60 p-4 border border-blue-100 flex flex-col justify-between">
@@ -155,7 +155,7 @@ export default function EmployerHeader() {
                         <h4 className="mt-2 font-display text-sm font-bold text-slate-900 leading-snug">
                           With Free Job Posting, hire local talent at zero cost
                         </h4>
-                        <p className="mt-1.5 text-[11px] text-slate-500 leading-relaxed">
+                        <p className="mt-1.5 text-xs text-slate-500 leading-relaxed">
                           Post verified jobs every month with up to 50 pre-screened applicants.
                         </p>
                       </div>
@@ -170,38 +170,38 @@ export default function EmployerHeader() {
 
                     {/* Middle Column: BY PRODUCTS */}
                     <div className="col-span-4 space-y-2 text-xs">
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      <div className="text-xs font-extrabold uppercase tracking-wider text-slate-400">
                         By Products
                       </div>
                       <div className="space-y-1">
                         <Link href="/employer/jobs/new" className="block p-1.5 rounded-lg hover:bg-slate-50">
-                          <div className="font-bold text-slate-900">Job Posting</div>
-                          <div className="text-[10px] text-slate-500">Inbound verified applications</div>
+                          <div className="font-bold text-slate-900 text-xs">Job Posting</div>
+                          <div className="text-[11px] text-slate-500">Inbound verified applications</div>
                         </Link>
                         <Link href="/employers/plans" className="block p-1.5 rounded-lg hover:bg-slate-50">
-                          <div className="font-bold text-slate-900">Resdex</div>
-                          <div className="text-[10px] text-slate-500">Search 10k+ resume database</div>
+                          <div className="font-bold text-slate-900 text-xs">Resdex</div>
+                          <div className="text-[11px] text-slate-500">Search 10k+ resume database</div>
                         </Link>
                         <Link href="/employers" className="block p-1.5 rounded-lg hover:bg-slate-50">
-                          <div className="font-bold text-slate-900 flex items-center gap-1">
+                          <div className="font-bold text-slate-900 text-xs flex items-center gap-1">
                             <span>AI REX</span>
                             <span className="bg-rose-500 text-white text-[8px] font-black px-1 rounded">NEW</span>
                           </div>
-                          <div className="text-[10px] text-slate-500">Auto match & explainable score</div>
+                          <div className="text-[11px] text-slate-500">Auto match & explainable score</div>
                         </Link>
                         <Link href="/employers" className="block p-1.5 rounded-lg hover:bg-slate-50">
-                          <div className="font-bold text-slate-900">Employer Branding</div>
-                          <div className="text-[10px] text-slate-500">Showcase tech culture & perks</div>
+                          <div className="font-bold text-slate-900 text-xs">Employer Branding</div>
+                          <div className="text-[11px] text-slate-500">Showcase tech culture & perks</div>
                         </Link>
                       </div>
                     </div>
 
                     {/* Right Column: BY BUSINESS TYPE */}
                     <div className="col-span-3 space-y-2 text-xs border-l border-slate-100 pl-3">
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                        By Business Type
+                      <div className="text-xs font-extrabold uppercase tracking-wider text-slate-400">
+                        By Business
                       </div>
-                      <div className="space-y-1.5 text-slate-700 font-semibold">
+                      <div className="space-y-1.5 text-slate-700 font-semibold text-xs">
                         <Link href="/employers/enterprise" className="block hover:text-blue-600 transition">
                           Enterprises
                         </Link>
@@ -226,17 +226,17 @@ export default function EmployerHeader() {
             >
               <button
                 type="button"
-                className={`flex items-center gap-1.5 py-1 text-xs font-bold transition hover:text-slate-900 ${
-                  pathname.startsWith("/employers/") && !pathname.includes("/plans") ? "text-blue-600" : ""
+                className={`flex items-center gap-1.5 py-2 text-sm sm:text-base font-bold transition hover:text-blue-600 ${
+                  pathname.startsWith("/employers/") && !pathname.includes("/plans") ? "text-blue-600" : "text-slate-800"
                 }`}
               >
-                Solutions <ChevronDown size={14} className={`transition duration-200 ${solutionsOpen ? "rotate-180 text-blue-600" : ""}`} />
+                Solutions <ChevronDown size={16} className={`transition duration-200 ${solutionsOpen ? "rotate-180 text-blue-600" : ""}`} />
               </button>
 
               {solutionsOpen && (
-                <div className="absolute left-0 top-full pt-2 w-80">
-                  <div className="rounded-2xl border border-slate-200 bg-white p-2.5 shadow-xl">
-                    <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                <div className="absolute left-0 top-full pt-2 w-84">
+                  <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-xl">
+                    <div className="px-3 py-1.5 text-xs font-extrabold uppercase tracking-wider text-slate-400">
                       Industry Solutions
                     </div>
                     {industries.map((ind) => {
@@ -273,8 +273,8 @@ export default function EmployerHeader() {
 
             <Link
               href="/employers/it-software"
-              className={`text-xs font-bold transition hover:text-slate-900 ${
-                pathname === "/employers/it-software" ? "text-blue-600 font-extrabold" : ""
+              className={`text-sm sm:text-base font-bold transition hover:text-blue-600 ${
+                pathname === "/employers/it-software" ? "text-blue-600 font-extrabold" : "text-slate-800"
               }`}
             >
               For IT & Tech
@@ -282,8 +282,8 @@ export default function EmployerHeader() {
 
             <Link
               href="/employers/plans"
-              className={`text-xs font-bold transition hover:text-slate-900 ${
-                pathname === "/employers/plans" ? "text-blue-600 font-extrabold" : ""
+              className={`text-sm sm:text-base font-bold transition hover:text-blue-600 ${
+                pathname === "/employers/plans" ? "text-blue-600 font-extrabold" : "text-slate-800"
               }`}
             >
               Pricing & Plans
@@ -291,8 +291,8 @@ export default function EmployerHeader() {
 
             <Link
               href="/employers/contact-sales"
-              className={`text-xs font-bold transition hover:text-slate-900 ${
-                pathname === "/employers/contact-sales" ? "text-blue-600 font-extrabold" : ""
+              className={`text-sm sm:text-base font-bold transition hover:text-blue-600 ${
+                pathname === "/employers/contact-sales" ? "text-blue-600 font-extrabold" : "text-slate-800"
               }`}
             >
               Enterprise Sales

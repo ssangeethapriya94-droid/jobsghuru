@@ -139,6 +139,15 @@ export default function NaukriStyleEmployerHero() {
                 </div>
               </div>
 
+              {/* Hero Platform Showcase PNG Image Card */}
+              <div className="rounded-3xl border border-blue-200/80 bg-gradient-to-br from-blue-50/50 via-white to-indigo-50/30 p-2 sm:p-3 shadow-md hover:shadow-xl transition duration-300 overflow-hidden">
+                <img
+                  src="/images/employer_hero_banner.png"
+                  alt="JobsGhuru Smart Enterprise Recruitment & Verified Tech Candidates Platform"
+                  className="w-full h-auto rounded-2xl object-cover shadow-2xs border border-slate-100"
+                />
+              </div>
+
               {/* Interactive Talent Radar / Live Talent Pulse */}
               <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
