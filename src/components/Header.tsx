@@ -127,9 +127,12 @@ export default function Header() {
 
           <Link
             href="/signup"
-            className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-extrabold text-white shadow-md transition hover:bg-blue-700 active:scale-98 whitespace-nowrap"
+            className="relative group rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-extrabold text-white shadow-md shadow-blue-600/20 transition hover:bg-blue-700 active:scale-98 whitespace-nowrap overflow-hidden"
           >
-            Sign up
+            <span className="relative z-10 flex items-center gap-1.5">
+              <span>Sign up</span>
+              <span className="inline-block h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
+            </span>
           </Link>
         </div>
 
