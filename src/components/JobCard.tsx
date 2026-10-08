@@ -121,16 +121,22 @@ export default function JobCard({ job }: { job: J }) {
         </div>
       </div>
 
-      {/* Footer: Posted time + Recruiter response rate with live pulse */}
+      {/* Footer: Posted time + Recruiter response rate with live pulse + Quick Apply CTA */}
       <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-3 text-xs text-slate-500">
         <span>Posted {ago(job.postedAt)}</span>
-        <span className="flex items-center gap-1.5 font-semibold text-emerald-700">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+        <div className="flex items-center gap-3">
+          <span className="flex items-center gap-1.5 font-semibold text-emerald-700">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            {job.responseRatePct}% response rate
           </span>
-          {job.responseRatePct}% response rate
-        </span>
+          <span className="inline-flex items-center gap-1 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-1 text-xs font-bold text-white shadow-xs opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all">
+            <span>Apply</span>
+            <ArrowRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
+          </span>
+        </div>
       </div>
     </Link>
   );

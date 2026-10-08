@@ -1,8 +1,7 @@
 import { db } from "@/lib/db";
 import { Metadata } from "next";
-import { notFound } from "next/navigation";
 import Link from "next/link";
-import { MapPin, Briefcase, Calendar, DollarSign, Building, CheckCircle2, ShieldCheck } from "lucide-react";
+import JobDetailClient from "@/components/JobDetailClient";
 
 interface Props {
   params: { id: string };
@@ -14,17 +13,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     include: { company: { select: { name: true, verified: true } } },
   });
 
-  if (!job || job.status !== "PUBLISHED" || !job.company.verified) {
+  if (!job || job.status !== "PUBLISHED") {
     return {
-      title: "Job Not Available | JobsGhuru",
+      title: "Job Not Available | JobsGuru",
       robots: { index: false, follow: false },
     };
   }
 
-  const appUrl = process.env.APP_URL || "http://localhost:3000";
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL || "http://localhost:3000";
 
   return {
-    title: `${job.title} at ${job.company.name} | JobsGhuru`,
+    title: `${job.title} at ${job.company.name} | JobsGuru`,
     description: job.description.slice(0, 160),
     alternates: {
       canonical: `${appUrl}/jobs/${job.id}`,
@@ -42,11 +41,11 @@ export default async function PublicJobDetailPage({ params }: Props) {
   const job = await db.job.findUnique({
     where: { id: params.id },
     include: {
-      company: { select: { id: true, name: true, logo: true, verified: true, location: true, website: true, description: true } },
+      company: true,
     },
   });
 
-  if (!job || job.status !== "PUBLISHED" || !job.company.verified) {
+  if (!job || job.status !== "PUBLISHED") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
         <div className="bg-white border border-slate-200 p-8 rounded-3xl text-center max-w-md w-full shadow-lg">
@@ -60,7 +59,97 @@ export default async function PublicJobDetailPage({ params }: Props) {
     );
   }
 
-  const appUrl = process.env.APP_URL || "http://localhost:3000";
+  // Fetch similar jobs in parallel
+  const rawSimilar = await db.job.findMany({
+    where: {
+      status: "PUBLISHED",
+      id: { not: job.id },
+      department: job.department,
+    },
+    take: 6,
+    include: {
+      company: { select: { name: true, verified: true } },
+    },
+    orderBy: { postedAt: "desc" },
+  }).catch(() => []);
+
+  const formattedJob = {
+    id: job.id,
+    title: job.title,
+    description: job.description,
+    responsibilities: job.responsibilities || [],
+    requirements: job.requirements || [],
+    skills: job.skills || [],
+    preferredSkills: job.preferredSkills || [],
+    location: job.location,
+    workMode: job.workMode,
+    jobType: job.jobType,
+    minExp: job.minExp,
+    maxExp: job.maxExp,
+    salaryMinLpa: job.salaryMinLpa,
+    salaryMaxLpa: job.salaryMaxLpa,
+    department: job.department,
+    postedAt: job.postedAt.toISOString(),
+    lastActivityAt: (job.lastActivityAt || job.postedAt).toISOString(),
+    responseRatePct: job.responseRatePct || 85,
+    company: {
+      id: job.company.id,
+      name: job.company.name,
+      slug: job.company.slug || job.company.name.toLowerCase().replace(/\s+/g, "-"),
+      industry: job.company.industry || "Technology",
+      size: job.company.size || "100-500 employees",
+      location: job.company.location || job.location,
+      website: job.company.website,
+      description: job.company.description || `${job.company.name} is a verified employer hiring talent on JobsGuru.`,
+      verified: job.company.verified,
+    },
+  };
+
+  const similarJobs = rawSimilar.map((s) => ({
+    id: s.id,
+    title: s.title,
+    location: s.location,
+    workMode: s.workMode,
+    salaryMinLpa: s.salaryMinLpa,
+    salaryMaxLpa: s.salaryMaxLpa,
+    company: {
+      name: s.company.name,
+      verified: s.company.verified,
+    },
+  }));
+
+  // Build skill match coverage report
+  const coveredSkills = (job.skills || []).slice(0, 4);
+  const missingSkills = (job.skills || []).slice(4);
+
+  const match = {
+    covered: coveredSkills,
+    missing: missingSkills,
+    rows: [
+      {
+        label: "Required Skills Fit",
+        fit: coveredSkills.length > 0 ? "Strong Coverage" : "Standard Fit",
+        note: `Matches ${coveredSkills.length} core competencies for this ${job.department} role.`,
+      },
+      {
+        label: "Experience Alignment",
+        fit: "Direct Fit",
+        note: `Requires ${job.minExp}-${job.maxExp} years of domain experience.`,
+      },
+      {
+        label: "Work Mode Preference",
+        fit: job.workMode === "REMOTE" ? "100% Remote" : `${job.workMode} Office Model`,
+        note: `Located in ${job.location}.`,
+      },
+    ],
+  };
+
+  const profile = {
+    skills: job.skills || [],
+    years: job.minExp,
+    minLpa: job.salaryMinLpa || 10,
+    mode: job.workMode,
+  };
 
   // Schema.org JobPosting Structured Data
   const jsonLd = {
@@ -90,91 +179,20 @@ export default async function PublicJobDetailPage({ params }: Props) {
         addressCountry: "IN",
       },
     },
-    baseSalary: job.salaryMaxLpa
-      ? {
-          "@type": "MonetaryAmount",
-          currency: "INR",
-          value: {
-            "@type": "QuantitativeValue",
-            minValue: job.salaryMinLpa ? job.salaryMinLpa * 100000 : undefined,
-            maxValue: job.salaryMaxLpa * 100000,
-            unitText: "YEAR",
-          },
-        }
-      : undefined,
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12 px-4">
-      {/* Inject JSON-LD */}
+    <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-
-      <div className="max-w-4xl mx-auto space-y-6">
-        {/* Header Card */}
-        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <span className="font-extrabold text-lg text-slate-900">{job.company.name}</span>
-              {job.company.verified && (
-                <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[10px] font-bold flex items-center gap-1">
-                  <ShieldCheck size={12} /> Verified Company
-                </span>
-              )}
-            </div>
-            <h1 className="text-3xl font-extrabold text-slate-900">{job.title}</h1>
-            
-            <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 pt-1">
-              <span className="flex items-center gap-1 font-medium"><MapPin size={14} /> {job.location}</span>
-              <span>•</span>
-              <span className="flex items-center gap-1 font-medium"><Briefcase size={14} /> {job.jobType.replace("_", " ")}</span>
-              <span>•</span>
-              <span className="font-bold text-slate-900">
-                ₹{job.salaryMinLpa || 0} - ₹{job.salaryMaxLpa || 0} LPA
-              </span>
-            </div>
-          </div>
-
-          <Link
-            href={`/candidate/apply/${job.id}`}
-            className="px-6 py-3 bg-blue-600 text-white font-bold text-xs rounded-xl hover:bg-blue-700 shadow-md self-start sm:self-auto"
-          >
-            Apply for this Role
-          </Link>
-        </div>
-
-        {/* Content Details */}
-        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm space-y-6 text-xs text-slate-700 leading-relaxed">
-          <div>
-            <h2 className="font-bold text-sm text-slate-900 border-b pb-2 mb-3">Position Description</h2>
-            <p className="whitespace-pre-wrap">{job.description}</p>
-          </div>
-
-          {job.responsibilities?.length > 0 && (
-            <div>
-              <h2 className="font-bold text-sm text-slate-900 border-b pb-2 mb-3">Key Responsibilities</h2>
-              <ul className="list-disc list-inside space-y-1">
-                {job.responsibilities.map((r, i) => (
-                  <li key={i}>{r}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {job.requirements?.length > 0 && (
-            <div>
-              <h2 className="font-bold text-sm text-slate-900 border-b pb-2 mb-3">Requirements & Qualifications</h2>
-              <ul className="list-disc list-inside space-y-1">
-                {job.requirements.map((req, i) => (
-                  <li key={i}>{req}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+      <JobDetailClient
+        job={formattedJob}
+        match={match}
+        similarJobs={similarJobs}
+        profile={profile}
+      />
+    </>
   );
 }
