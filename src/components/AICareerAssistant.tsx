@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition, useEffect, useRef } from "react";
 import Link from "next/link";
 import {
   Sparkles,
@@ -22,15 +22,20 @@ import {
   Send,
   HelpCircle,
   Lightbulb,
+  FileText,
+  UploadCloud,
+  GraduationCap,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { CareerAssistantResponse, JobSearchFilters, AIMatchedJob } from "@/lib/ai/schemas";
 
 const QUICK_PROMPTS = [
+  "📄 Match jobs with my Resume",
   "Remote React Jobs",
   "Jobs in Chennai",
   "Jobs above ₹10 LPA",
-  "Jobs matching my profile",
-  "What should I learn next?",
+  "What skills should I learn next?",
 ];
 
 interface AICareerAssistantProps {
@@ -52,6 +57,15 @@ export default function AICareerAssistant({
     "Jobs in Chennai above ₹12 LPA",
   ]);
 
+  // Resume Matching State
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [resumeFileName, setResumeFileName] = useState<string | null>(null);
+  const [extractedSkills, setExtractedSkills] = useState<string[]>([]);
+  const [extractedExp, setExtractedExp] = useState<number | null>(null);
+  const [detectedRole, setDetectedRole] = useState<string | null>(null);
+  const [activePlanJobId, setActivePlanJobId] = useState<string | null>(null);
+  const [isUploadingResume, setIsUploadingResume] = useState(false);
+
   // Automatically execute query if initialQuery was supplied via URL/navigation
   useEffect(() => {
     if (initialQuery) {
@@ -63,6 +77,15 @@ export default function AICareerAssistant({
   // Execute query against the AI backend
   const handleAskAI = async (queryText?: string, previousFilters?: JobSearchFilters) => {
     const textToQuery = (queryText !== undefined ? queryText : query).trim();
+    
+    // If prompt is "Match jobs with my Resume", open file picker or trigger resume match
+    if (textToQuery.includes("Match jobs with my Resume") || textToQuery.includes("my Resume")) {
+      if (fileInputRef.current) {
+        fileInputRef.current.click();
+        return;
+      }
+    }
+
     if (!textToQuery) return;
 
     setLoading(true);
@@ -91,6 +114,43 @@ export default function AICareerAssistant({
       console.error("AI Request Failed:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Upload & Process Candidate Resume
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingResume(true);
+    setLoading(true);
+    setResumeFileName(file.name);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/ai/resume-match", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setResponse(data.response);
+        setExtractedSkills(data.extractedSkills || []);
+        setExtractedExp(data.extractedExp || null);
+        setDetectedRole(data.detectedRole || null);
+        setQuery(`Resume Matched: ${file.name}`);
+      } else {
+        alert(data.error || "Failed to analyze resume.");
+      }
+    } catch (err) {
+      console.error("Resume analysis failed:", err);
+    } finally {
+      setIsUploadingResume(false);
+      setLoading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
@@ -129,6 +189,15 @@ export default function AICareerAssistant({
 
   return (
     <section id="career" className={`scroll-mt-24 ${isFullPage ? "" : "container-x my-20"}`}>
+      {/* Hidden File Input for Resume Match */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileUpload}
+        accept=".pdf,.doc,.docx,.txt"
+        className="hidden"
+      />
+
       {/* Header Container */}
       <div className="flex flex-col items-center text-center max-w-2xl mx-auto">
         <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50/90 px-3.5 py-1 text-xs font-bold text-blue-700 shadow-2xs">
@@ -139,7 +208,7 @@ export default function AICareerAssistant({
           AI Career Assistant
         </h2>
         <p className="mt-2 text-sm sm:text-base text-slate-600 font-medium">
-          Find jobs, build your career, and get personalized guidance.
+          Find jobs, match your resume, and get personalized skill development plans.
         </p>
       </div>
 
@@ -159,14 +228,18 @@ export default function AICareerAssistant({
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Describe what you're looking for (e.g. Remote React jobs in Chennai above ₹10 LPA)..."
+              placeholder="Describe what you're looking for or click Upload Resume..."
               className="w-full border-0 bg-transparent py-2.5 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none"
               aria-label="Describe what you are looking for"
             />
             {query && (
               <button
                 type="button"
-                onClick={() => setQuery("")}
+                onClick={() => {
+                  setQuery("");
+                  setResumeFileName(null);
+                  setExtractedSkills([]);
+                }}
                 className="text-slate-400 hover:text-slate-600 p-1 mr-1"
               >
                 <X size={15} />
@@ -174,23 +247,37 @@ export default function AICareerAssistant({
             )}
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 px-6 py-3 text-sm font-bold text-white shadow-md shadow-blue-600/25 transition active:scale-98 disabled:opacity-70"
-          >
-            {loading ? (
-              <span className="flex items-center gap-2">
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                Thinking...
-              </span>
-            ) : (
-              <>
-                <Send size={15} />
-                Ask AI
-              </>
-            )}
-          </button>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            {/* Direct Upload Resume Button */}
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploadingResume || loading}
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-xs font-bold text-blue-700 hover:bg-blue-100 hover:border-blue-300 transition shrink-0"
+              title="Upload your resume (PDF/DOCX) for AI job matching"
+            >
+              <UploadCloud size={15} className="text-blue-600" />
+              <span>{isUploadingResume ? "Parsing..." : "Upload Resume"}</span>
+            </button>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 px-6 py-3 text-sm font-bold text-white shadow-md shadow-blue-600/25 transition active:scale-98 disabled:opacity-70"
+            >
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  Analyzing...
+                </span>
+              ) : (
+                <>
+                  <Send size={15} />
+                  Ask AI
+                </>
+              )}
+            </button>
+          </div>
         </form>
 
         {/* Quick Prompts Bar */}
@@ -423,6 +510,47 @@ export default function AICareerAssistant({
           </div>
         )}
 
+        {/* Resume Analysis Summary Banner */}
+        {resumeFileName && (
+          <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50/80 p-4 shadow-2xs">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <FileText size={22} className="text-emerald-600 shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="text-sm font-bold text-emerald-950 flex items-center gap-2">
+                    Resume Analyzed: <span className="underline">{resumeFileName}</span>
+                  </h4>
+                  <p className="mt-1 text-xs text-emerald-800 font-medium">
+                    Role Detected: <strong className="text-emerald-950">{detectedRole || "Software Developer"}</strong> • Experience: <strong className="text-emerald-950">{extractedExp || 2}+ years</strong>
+                  </p>
+                  {extractedSkills.length > 0 && (
+                    <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                      <span className="text-[11px] font-bold text-emerald-900">Extracted Skills:</span>
+                      {extractedSkills.map((s) => (
+                        <span key={s} className="rounded bg-emerald-100 border border-emerald-300 px-2 py-0.5 text-[11px] font-bold text-emerald-800">
+                          ✓ {s}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setResumeFileName(null);
+                  setExtractedSkills([]);
+                  setQuery("");
+                  handleAskAI("Find developer jobs");
+                }}
+                className="text-xs font-bold text-emerald-700 hover:text-emerald-900 underline shrink-0"
+              >
+                Clear Resume
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Real Published Job Results Section */}
         {response && !response.clarification?.needed && (
           <div className="mt-8">
@@ -456,6 +584,8 @@ export default function AICareerAssistant({
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 {response.jobs.map((job) => {
                   const isSaved = savedJobs.includes(job.id);
+                  const devPlan = (job as any).developmentPlan || [];
+
                   return (
                     <div
                       key={job.id}
@@ -509,8 +639,9 @@ export default function AICareerAssistant({
 
                         {/* Explainable Match: Why This Job Matches & Skill Gap */}
                         <div className="mt-3.5 space-y-1.5 rounded-xl border border-slate-100 bg-slate-50/80 p-2.5 text-[11px]">
-                          <div className="font-bold uppercase tracking-wider text-slate-500 text-[10px]">
-                            Why this job matches ({job.matchScore}% Match):
+                          <div className="font-bold uppercase tracking-wider text-slate-500 text-[10px] flex items-center justify-between">
+                            <span>Why this job matches</span>
+                            <span className="text-blue-700 font-extrabold">{job.matchScore}% Match</span>
                           </div>
                           {job.reasons.slice(0, 2).map((r, i) => (
                             <div key={i} className="flex items-center gap-1.5">
@@ -525,6 +656,41 @@ export default function AICareerAssistant({
                             </div>
                           ))}
                         </div>
+
+                        {/* Missing Skills & Skill Development Plan Accordion */}
+                        {devPlan.length > 0 && (
+                          <div className="mt-3 border-t border-slate-100 pt-2">
+                            <button
+                              type="button"
+                              onClick={() => setActivePlanJobId(activePlanJobId === job.id ? null : job.id)}
+                              className="flex items-center justify-between w-full text-xs font-bold text-amber-700 hover:text-amber-900 py-1"
+                            >
+                              <span className="flex items-center gap-1">
+                                <GraduationCap size={14} className="text-amber-600" />
+                                Skill Gap Guide ({devPlan.length} missing skill{devPlan.length === 1 ? "" : "s"})
+                              </span>
+                              {activePlanJobId === job.id ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                            </button>
+
+                            {activePlanJobId === job.id && (
+                              <div className="mt-2 space-y-2 rounded-xl bg-amber-50/80 p-3 text-xs border border-amber-200">
+                                {devPlan.map((plan: any, idx: number) => (
+                                  <div key={idx} className="space-y-0.5">
+                                    <div className="font-bold text-amber-950 flex items-center justify-between">
+                                      <span>⚠️ Missing: {plan.skill}</span>
+                                      <span className="text-[10px] text-amber-800 bg-amber-200/80 px-1.5 py-0.2 rounded font-bold">
+                                        ~{plan.estimatedTime}
+                                      </span>
+                                    </div>
+                                    <p className="text-amber-900 text-[11px] leading-relaxed font-medium">
+                                      {plan.learningGuide}
+                                    </p>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
 
                       {/* Card Actions */}
