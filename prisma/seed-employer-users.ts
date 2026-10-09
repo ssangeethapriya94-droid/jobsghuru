@@ -33,23 +33,48 @@ async function main() {
     }
   }
 
-  // Ensure default demo recruiter
-  const northwind = await db.company.findFirst({ where: { name: "Northwind Labs" } });
-  if (northwind) {
+  // Ensure default demo recruiters
+  let demoCompany = await db.company.findFirst({ where: { verified: true } });
+  if (!demoCompany) {
+    demoCompany = await db.company.create({
+      data: {
+        name: "JobsGhuru Verified Enterprise",
+        slug: "jobsghuru-verified-enterprise",
+        verified: true,
+        industry: "Information Technology",
+        location: "Bengaluru, India",
+        size: "100-500",
+        description: "Verified corporate hiring partner on JobsGhuru.",
+      },
+    });
+  }
+
+  const demoAccounts = [
+    { email: "sarah.recruiter@example.com", name: "Sarah Jenkins" },
+    { email: "recruiter@example.com", name: "Alex Recruiter" },
+    { email: "recruiter@northwindlabs.com", name: "Karthik Raja" },
+  ];
+
+  for (const acc of demoAccounts) {
     await db.user.upsert({
-      where: { email: "recruiter@northwindlabs.com" },
-      update: { companyId: northwind.id, role: UserRole.COMPANY_ADMIN },
+      where: { email: acc.email },
+      update: {
+        companyId: demoCompany.id,
+        role: UserRole.COMPANY_ADMIN,
+        status: UserStatus.ACTIVE,
+        passwordHash: hashPassword("RecruiterPass123!"),
+      },
       create: {
-        name: "Karthik Raja",
-        email: "recruiter@northwindlabs.com",
-        passwordHash: hashPassword("CareerBridge2026!"),
+        name: acc.name,
+        email: acc.email,
+        passwordHash: hashPassword("RecruiterPass123!"),
         role: UserRole.COMPANY_ADMIN,
         status: UserStatus.ACTIVE,
         phone: "+91 98401 23456",
-        companyId: northwind.id,
+        companyId: demoCompany.id,
       },
     });
-    console.log("Ensured recruiter@northwindlabs.com exists.");
+    console.log(`Ensured employer user ${acc.email} exists with password RecruiterPass123!`);
   }
 }
 

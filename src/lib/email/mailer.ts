@@ -992,6 +992,87 @@ export async function verifySmtpConnection(): Promise<{ success: boolean; messag
   }
 }
 
+interface SendPasswordResetEmailParams {
+  toEmail: string;
+  recipientName: string;
+  resetUrl: string;
+}
+
+export async function sendPasswordResetEmail({
+  toEmail,
+  recipientName,
+  resetUrl,
+}: SendPasswordResetEmailParams) {
+  const subject = `🔐 Password Reset Request - JobsGuru / CareerBridge`;
+  const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f1f5f9; margin: 0; padding: 24px; color: #1e293b; }
+    .card { max-width: 580px; margin: 0 auto; background: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0; }
+    .header { background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%); padding: 32px; text-align: center; color: #ffffff; }
+    .title { margin: 0; font-size: 22px; font-weight: 800; }
+    .content { padding: 32px; }
+    .greeting { font-size: 16px; font-weight: 700; color: #0f172a; margin-bottom: 12px; }
+    .text { font-size: 14px; line-height: 1.6; color: #475569; margin-bottom: 24px; }
+    .btn-container { text-align: center; margin: 28px 0; }
+    .btn { display: inline-block; background: #2563eb; color: #ffffff !important; font-size: 14px; font-weight: 700; text-decoration: none; padding: 14px 32px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); }
+    .notice { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 12px 16px; border-radius: 0 8px 8px 0; font-size: 12px; color: #1e40af; line-height: 1.5; margin-bottom: 24px; }
+    .footer { border-top: 1px solid #e2e8f0; padding: 20px 32px; text-align: center; font-size: 12px; color: #94a3b8; background: #fafafa; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <h1 class="title">JobsGuru Account Recovery</h1>
+    </div>
+    <div class="content">
+      <div class="greeting">Hello ${recipientName || "Employer"},</div>
+      <p class="text">
+        We received a request to reset the password for your JobsGuru / CareerBridge account. Click the button below to set a new password:
+      </p>
+      <div class="btn-container">
+        <a href="${resetUrl}" class="btn" target="_blank">Reset Password Now</a>
+      </div>
+      <div class="notice">
+        <strong>Important:</strong> This password reset link is valid for 60 minutes. If you did not request this change, please ignore this email or contact support immediately.
+      </div>
+    </div>
+    <div class="footer">&copy; ${new Date().getFullYear()} JobsGuru Platform Security Team</div>
+  </div>
+</body>
+</html>
+  `;
+
+  const outboxEntry: OutboxEmail = {
+    id: `email-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+    to: toEmail,
+    subject,
+    preview: `Reset password instructions for ${toEmail}.`,
+    sentAt: new Date().toISOString(),
+    html: htmlContent,
+  };
+  emailOutbox.unshift(outboxEntry);
+
+  try {
+    const transporter = createTransporter();
+    if (transporter) {
+      await transporter.sendMail({
+        from: process.env.SMTP_FROM || `"JobsGuru Security" <no-reply@jobsghuru.com>`,
+        to: toEmail,
+        subject,
+        html: htmlContent,
+      });
+    }
+  } catch (err) {
+    console.error("[EMAIL DISPATCH] Reset password email error:", err);
+  }
+
+  return { success: true, outboxId: outboxEntry.id };
+}
+
 
 
 

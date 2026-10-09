@@ -28,6 +28,7 @@ import {
   DollarSign,
   TrendingUp,
   MapPin,
+  Mail,
   Lock,
 } from "lucide-react";
 
@@ -274,34 +275,30 @@ export default function NaukriStyleEmployerHero() {
                     </button>
                   </div>
 
-                  {/* Input: Mobile Number or Corporate Work Email */}
+                  {/* Input: Corporate Work Email Only */}
                   <div>
                     <label className="block font-bold text-slate-800 mb-1.5 text-xs">
                       {userType === "new"
-                        ? "Official Corporate Work Email or Mobile Number *"
+                        ? "Official Corporate Work Email *"
                         : "Registered Recruiter Work Email *"}
                     </label>
                     <div className="relative flex rounded-xl border border-slate-300 focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100 overflow-hidden bg-white transition">
-                      <span className="flex items-center bg-slate-50 border-r border-slate-200 px-3.5 text-slate-700 font-semibold text-xs shrink-0">
-                        +91 🇮🇳
+                      <span className="flex items-center bg-slate-50 border-r border-slate-200 px-3 text-slate-500 font-semibold text-xs shrink-0">
+                        <Mail size={16} className="text-blue-600" />
                       </span>
                       <input
-                        type="text"
+                        type="email"
                         required
                         value={mobileOrEmail}
                         onChange={(e) => setMobileOrEmail(e.target.value)}
-                        placeholder={
-                          userType === "new"
-                            ? "98450 12345 or recruiter@company.com"
-                            : "recruiter@company.com"
-                        }
+                        placeholder="recruiter@company.com"
                         className="w-full py-3 px-3.5 text-xs text-slate-900 focus:outline-none"
                       />
                     </div>
                     <p className="text-[10px] text-slate-400 mt-1.5">
                       {userType === "new"
-                        ? "We cross-reference MCA & GST registries to keep Jobsghuru 100% scam-free."
-                        : "Enter your registered corporate credentials to manage applications & interviews."}
+                        ? "Enter your official company work email. MCA & GST registries are verified to prevent unauthorized access."
+                        : "Enter your registered corporate email to access your company dashboard."}
                     </p>
                   </div>
 

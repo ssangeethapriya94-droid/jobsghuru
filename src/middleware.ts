@@ -28,11 +28,17 @@ export function middleware(request: NextRequest) {
   }
 
   // 2. Employer workspace protection (/employer/*)
-  if (pathname.startsWith("/employer")) {
+  if (pathname.startsWith("/employer/") || pathname === "/employer") {
     const employerSessionToken = request.cookies.get("cb_employer_session")?.value;
 
-    if (pathname === "/employer/login") {
-      if (employerSessionToken) {
+    // Exempt public employer authentication routes
+    const isPublicEmployerRoute =
+      pathname === "/employer/login" ||
+      pathname === "/employer/forgot-password" ||
+      pathname === "/employer/reset-password";
+
+    if (isPublicEmployerRoute) {
+      if (employerSessionToken && pathname === "/employer/login") {
         return NextResponse.redirect(new URL("/employer/dashboard", request.url));
       }
       return NextResponse.next();
@@ -94,7 +100,14 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  return NextResponse.next();
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-pathname", pathname);
+
+  return NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
 }
 
 export const config = {

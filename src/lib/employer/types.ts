@@ -1,5 +1,14 @@
 import { UserRole } from "@prisma/client";
 
+export interface CompanySummary {
+  id: string;
+  name: string;
+  slug: string;
+  verified: boolean;
+  logo?: string | null;
+  industry: string;
+}
+
 export interface EmployerSessionUser {
   id: string;
   name: string;
@@ -13,6 +22,7 @@ export interface EmployerSessionUser {
   companyVerified: boolean;
   companyLogo?: string | null;
   industry: string;
+  availableCompanies?: CompanySummary[];
 }
 
 export interface PlanRecommendationInput {

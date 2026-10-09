@@ -114,6 +114,7 @@ export async function GET(req: NextRequest) {
         email: employer.email,
         role: employer.role,
       },
+      availableCompanies: employer.availableCompanies || [],
       kpis: {
         activeJobs: activeJobsCount,
         maxJobs: planInfo.jobLimit,

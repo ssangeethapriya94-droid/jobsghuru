@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Building2,
   ShieldCheck,
@@ -86,6 +87,7 @@ export default function AdminCompaniesView({
   initialCompanies: CompanyItem[];
   filterOnlyPending?: boolean;
 }) {
+  const router = useRouter();
   const [companies, setCompanies] = useState<CompanyItem[]>(initialCompanies);
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState<"all" | "pending" | "verified" | "rejected">(
@@ -270,6 +272,7 @@ export default function AdminCompaniesView({
             : `Company "${selectedCompany.name}" rejected. Rejection notice dispatched to recruiter email.`
         );
       }
+      router.refresh();
     } catch (err: any) {
       alert(err.message || "Failed to process verification.");
     }
@@ -345,6 +348,7 @@ export default function AdminCompaniesView({
 
       setShowInlineReject(false);
       showToast(`✓ "${detailCompany.name}" rejected. Notice dispatched to recruiter.`);
+      router.refresh();
     } catch (err: any) {
       alert(err.message || "Failed to reject company.");
     } finally {
@@ -361,7 +365,7 @@ export default function AdminCompaniesView({
       const res = await fetch(`/api/admin/companies/${detailCompany.id}/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "VERIFY", reason: "Approved legal compliance and corporate verification." }),
+        body: JSON.stringify({ action: "APPROVE", reason: "Approved legal compliance and corporate verification." }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to approve company.");
@@ -430,6 +434,7 @@ export default function AdminCompaniesView({
       } else {
         showToast(`✓ "${detailCompany.name}" approved successfully!`);
       }
+      router.refresh();
     } catch (err: any) {
       alert(err.message || "Failed to approve company.");
     } finally {
@@ -444,7 +449,7 @@ export default function AdminCompaniesView({
       const res = await fetch(`/api/admin/companies/${company.id}/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "VERIFY", reason: "Approved by JobsGuru Admin" }),
+        body: JSON.stringify({ action: "APPROVE", reason: "Approved by JobsGuru Admin" }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to approve company.");
@@ -501,8 +506,78 @@ export default function AdminCompaniesView({
       } else {
         showToast(`✓ "${company.name}" approved successfully!`);
       }
+      router.refresh();
     } catch (err: any) {
       alert(err.message || "Failed to approve company.");
+    } finally {
+      setIsProcessingAction(false);
+    }
+  };
+
+  // Direct 1-Click Rejection from Table Row
+  const handleQuickReject = async (company: CompanyItem) => {
+    const reasonInput = prompt(
+      `Reject verification for "${company.name}"?\nEnter reason for rejection:`,
+      "Tax ID and corporate registration details failed verification."
+    );
+    if (reasonInput === null) return; // User cancelled prompt
+
+    const reasonToUse = reasonInput.trim() || "Tax ID and corporate registration details failed verification.";
+    setIsProcessingAction(true);
+    try {
+      const res = await fetch(`/api/admin/companies/${company.id}/verify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "REJECT", reason: reasonToUse }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to reject company.");
+
+      setCompanies((prev) =>
+        prev.map((c) => {
+          if (c.id === company.id) {
+            return {
+              ...c,
+              verified: false,
+              recruiter: c.recruiter ? { ...c.recruiter, status: "SUSPENDED" } : null,
+              verifications: [
+                {
+                  id: c.verifications?.[0]?.id || "v-rej",
+                  legalName: c.legalName || c.name,
+                  taxId: c.verifications?.[0]?.taxId || null,
+                  businessRegister: c.verifications?.[0]?.businessRegister || null,
+                  domain: c.verifications?.[0]?.domain || null,
+                  recruiterProof: c.verifications?.[0]?.recruiterProof || null,
+                  documents: c.verifications?.[0]?.documents || [],
+                  status: "REJECTED",
+                  notes: reasonToUse,
+                  reviewedBy: "JobsGuru Admin",
+                  reviewedAt: new Date().toISOString(),
+                  submittedAt: c.verifications?.[0]?.submittedAt || new Date().toISOString(),
+                },
+              ],
+            };
+          }
+          return c;
+        })
+      );
+
+      if (detailCompany && detailCompany.id === company.id) {
+        setDetailCompany((prev) =>
+          prev
+            ? {
+                ...prev,
+                verified: false,
+                recruiter: prev.recruiter ? { ...prev.recruiter, status: "SUSPENDED" } : null,
+              }
+            : null
+        );
+      }
+
+      showToast(`✕ "${company.name}" rejected. Notice logged to audit record.`);
+      router.refresh();
+    } catch (err: any) {
+      alert(err.message || "Failed to reject company.");
     } finally {
       setIsProcessingAction(false);
     }
@@ -819,11 +894,9 @@ export default function AdminCompaniesView({
                       </button>
                       <button
                         type="button"
-                        onClick={() => {
-                          setDetailCompany(c);
-                          setShowInlineReject(true);
-                        }}
-                        className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700 hover:bg-rose-100 transition"
+                        disabled={isProcessingAction}
+                        onClick={() => handleQuickReject(c)}
+                        className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700 hover:bg-rose-100 transition cursor-pointer"
                       >
                         Reject
                       </button>
@@ -1016,11 +1089,10 @@ export default function AdminCompaniesView({
                               </button>
                               <button
                                 type="button"
-                                onClick={() => {
-                                  setDetailCompany(c);
-                                  setShowInlineReject(true);
-                                }}
-                                className="rounded-xl border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-100 transition"
+                                disabled={isProcessingAction}
+                                onClick={() => handleQuickReject(c)}
+                                className="rounded-xl border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-100 transition cursor-pointer"
+                                title="Reject company verification"
                               >
                                 <span>Reject</span>
                               </button>

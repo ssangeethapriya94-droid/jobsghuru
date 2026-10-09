@@ -63,8 +63,39 @@ export async function getCurrentEmployer(): Promise<EmployerSessionUser | null> 
           return null;
         }
 
-        const c = u.company;
-        if (c && c.verified) {
+        // Fetch all verified companies associated with this user
+        const allCompanies = await db.company.findMany({
+          where: {
+            verified: true,
+            OR: [
+              ...(u.companyId ? [{ id: u.companyId }] : []),
+              { users: { some: { email: u.email } } },
+              { verifications: { some: { domain: u.email } } },
+              { verifications: { some: { notes: { contains: u.email } } } },
+            ],
+          },
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            verified: true,
+            logo: true,
+            industry: true,
+          },
+        });
+
+        if (allCompanies.length === 0 && (!u.company || !u.company.verified)) {
+          return null;
+        }
+
+        const activeCompanyCookie = cookieStore.get("cb_active_company_id")?.value;
+        const selectedCompany =
+          allCompanies.find((c) => c.id === activeCompanyCookie) ||
+          allCompanies.find((c) => c.id === u.companyId) ||
+          (u.company?.verified ? u.company : null) ||
+          allCompanies[0];
+
+        if (selectedCompany) {
           return {
             id: u.id,
             name: u.name,
@@ -72,12 +103,20 @@ export async function getCurrentEmployer(): Promise<EmployerSessionUser | null> 
             role: u.role,
             phone: u.phone,
             avatar: u.avatar,
-            companyId: c.id,
-            companyName: c.name,
-            companySlug: c.slug,
-            companyVerified: c.verified,
-            companyLogo: c.logo,
-            industry: c.industry,
+            companyId: selectedCompany.id,
+            companyName: selectedCompany.name,
+            companySlug: selectedCompany.slug,
+            companyVerified: selectedCompany.verified,
+            companyLogo: selectedCompany.logo,
+            industry: selectedCompany.industry,
+            availableCompanies: allCompanies.map((c) => ({
+              id: c.id,
+              name: c.name,
+              slug: c.slug,
+              verified: c.verified,
+              logo: c.logo,
+              industry: c.industry,
+            })),
           };
         }
       }

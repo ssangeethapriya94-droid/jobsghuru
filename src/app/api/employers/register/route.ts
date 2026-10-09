@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { db } from "@/lib/db";
 import { UserRole, UserStatus, VerificationStatus } from "@prisma/client";
 import { hashPassword } from "@/lib/employer/auth";
@@ -64,16 +65,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check if user email or company already exists
-    const existingUser = await db.user.findUnique({
-      where: { email: businessEmail.toLowerCase().trim() },
-    });
-    if (existingUser) {
-      return NextResponse.json(
-        { error: "An account with this official work email already exists. Please log in at /employer/login." },
-        { status: 409 }
-      );
-    }
+    const normalizedEmail = businessEmail.toLowerCase().trim();
 
     const companySlug = displayName
       .toLowerCase()
@@ -151,18 +143,44 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Create Recruiter User (Company Admin) - initially pending admin verification
-    const user = await db.user.create({
-      data: {
-        name: recruiterName,
-        email: businessEmail.toLowerCase().trim(),
-        passwordHash: hashPassword(password),
-        role: UserRole.COMPANY_ADMIN,
-        status: UserStatus.PENDING_VERIFICATION,
-        phone: recruiterPhone || businessPhone || null,
-        companyId: company.id,
-      },
+    // Resolve or Create Recruiter User (Company Admin)
+    const existingUser = await db.user.findUnique({
+      where: { email: normalizedEmail },
     });
+
+    let user = existingUser;
+    if (!user) {
+      user = await db.user.create({
+        data: {
+          name: recruiterName,
+          email: normalizedEmail,
+          passwordHash: hashPassword(password),
+          role: UserRole.COMPANY_ADMIN,
+          status: UserStatus.PENDING_VERIFICATION,
+          phone: recruiterPhone || businessPhone || null,
+          companyId: company.id,
+        },
+      });
+    } else {
+      // Update primary user companyId link if not yet set
+      if (!user.companyId) {
+        await db.user.update({
+          where: { id: user.id },
+          data: { companyId: company.id },
+        });
+      }
+    }
+
+    // Set active company cookie
+    try {
+      cookies().set("cb_active_company_id", company.id, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        expires: new Date(Date.now() + 30 * 24 * 3600 * 1000),
+      });
+    } catch {}
 
     // Process and format documents array
     const serializedDocs = Array.isArray(documents)
@@ -178,10 +196,10 @@ export async function POST(req: NextRequest) {
         legalName: legalName || displayName,
         taxId: taxId || null,
         businessRegister: cinNumber || website || null,
-        domain: corporateDomain || businessEmail.split("@")[1] || null,
+        domain: normalizedEmail,
         recruiterProof: `${recruiterDesignation || "Talent Acquisition Lead"}${staffId ? ` (Staff ID: ${staffId})` : ""}${linkedinUrl ? ` | ${linkedinUrl}` : ""}`,
         status: VerificationStatus.PENDING,
-        notes: `Enterprise Registration: Entity Type: ${companyType || "Private Limited"}, CIN: ${cinNumber || "N/A"}, Tax/GST: ${taxId || "N/A"}, Headcount: ${size || "51-200"}, Plan: ${selectedPlanCode || "GROWTH"}, Documents: ${serializedDocs.length} attached`,
+        notes: `Enterprise Registration for ${normalizedEmail}: Entity Type: ${companyType || "Private Limited"}, CIN: ${cinNumber || "N/A"}, Tax/GST: ${taxId || "N/A"}, Headcount: ${size || "51-200"}, Plan: ${selectedPlanCode || "GROWTH"}, Documents: ${serializedDocs.length} attached`,
         documents: serializedDocs,
       },
     });
@@ -249,7 +267,7 @@ export async function POST(req: NextRequest) {
       action: "COMPANY_REGISTERED",
       entityType: "COMPANY",
       entityId: company.id,
-      reason: `Company registered via wizard with plan ${selectedPlanCode || "GROWTH"}. Pending Admin approval.`,
+      reason: `Company ${company.name} registered via wizard with plan ${selectedPlanCode || "GROWTH"}. Pending Admin approval.`,
       afterJson: JSON.stringify({ companyId: company.id, name: company.name, plan: selectedPlanCode }),
       ipAddress: ip,
       userAgent: req.headers.get("user-agent") || undefined,
@@ -270,7 +288,7 @@ export async function POST(req: NextRequest) {
       verificationStatus: "PENDING",
       invoiceNumber,
       registeredEmail: user.email,
-      message: "Company registered successfully and submitted for admin review. Once approved, your login credentials will be emailed to your official email.",
+      message: "Company registered successfully and submitted for admin review. Once approved, you can manage this new company dashboard.",
     });
   } catch (error: any) {
     console.error("Error registering company:", error);

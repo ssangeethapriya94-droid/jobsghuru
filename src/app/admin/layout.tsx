@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { getCurrentAdmin } from "@/lib/admin/auth";
 import AdminLayoutClient from "@/components/admin/AdminLayoutClient";
 
+import { headers } from "next/headers";
+
 export const metadata = {
   title: "Admin Portal | JobsGhuru Enterprise",
   robots: "noindex, nofollow",
@@ -13,11 +15,16 @@ export default async function AdminRootLayout({
   children: React.ReactNode;
 }) {
   const admin = await getCurrentAdmin();
+  const headersList = headers();
+  const pathname = headersList.get("x-pathname") || "";
 
-  // If not authenticated as an admin, the individual pages or middleware redirect
-  // But for the shell, if logged in, render the full admin dashboard wrapper
   if (!admin) {
-    return <>{children}</>;
+    // Show standalone login screen without sidebar on /admin/login
+    if (pathname === "/admin/login") {
+      return <>{children}</>;
+    }
+    // Redirect unauthenticated / invalid admin session access to admin login page
+    redirect("/admin/login");
   }
 
   return (

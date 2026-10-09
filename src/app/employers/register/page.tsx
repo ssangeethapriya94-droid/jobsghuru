@@ -224,6 +224,14 @@ export default function EmployerRegisterWizard() {
     if (!searchParams.get("plan")) {
       setFormData((prev) => ({ ...prev, selectedPlanCode: recommendation.recommendedCode }));
     }
+    const contactParam = searchParams.get("contact");
+    if (contactParam) {
+      if (contactParam.includes("@")) {
+        setFormData((prev) => ({ ...prev, businessEmail: contactParam }));
+      } else {
+        setFormData((prev) => ({ ...prev, recruiterPhone: contactParam }));
+      }
+    }
   }, [recommendation.recommendedCode, searchParams]);
 
   // Pricing calculation
@@ -2529,10 +2537,10 @@ export default function EmployerRegisterWizard() {
                     </Link>
 
                     <Link
-                      href="/employer/login"
+                      href={`/employer/login?registered=true&email=${encodeURIComponent(registeredResult.registeredEmail || "")}`}
                       className="w-full sm:w-auto rounded-2xl bg-blue-600 hover:bg-blue-700 px-6 py-3.5 text-xs font-bold text-white shadow-md transition flex items-center justify-center gap-2 cursor-pointer"
                     >
-                      <span>Go to Employer Login</span>
+                      <span>Go to Employer Login (Pending Approval)</span>
                       <ArrowRight size={14} />
                     </Link>
 
