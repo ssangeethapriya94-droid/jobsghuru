@@ -1,8 +1,6 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { DEFAULT_CMS_PAGES } from "@/lib/cms-defaults";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import { Megaphone, Sparkles, ArrowRight } from "lucide-react";
 
 export const metadata = {
@@ -28,9 +26,7 @@ export default async function AdvertisePage() {
   const page = await getPageData();
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
-      <Header />
-
+    <div className="min-h-screen bg-slate-50 flex flex-col font-sans pb-16">
       <section className="bg-slate-900 text-white py-16 px-4 relative overflow-hidden">
         <div className="max-w-4xl mx-auto space-y-4">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-400/20">
@@ -71,8 +67,6 @@ export default async function AdvertisePage() {
           </div>
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 }

@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import {
   Headphones,
   Mail,
@@ -69,9 +67,7 @@ export default function ContactPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900">
-      <Header />
-
+    <div className="bg-slate-50 min-h-screen font-sans text-slate-900 pb-16">
       {/* Hero Banner Header */}
       <section className="relative bg-gradient-to-b from-slate-900 via-slate-900 to-blue-950 text-white py-14 px-4 sm:px-6 lg:px-8 overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-600/20 via-transparent to-transparent pointer-events-none" />
@@ -410,8 +406,6 @@ export default function ContactPage() {
         </div>
 
       </main>
-
-      <Footer />
     </div>
   );
 }
