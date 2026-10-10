@@ -169,21 +169,23 @@ export default function Header() {
         </nav>
 
         {/* Desktop Action Buttons & Real Notification Bell */}
-        <div className="hidden lg:flex items-center gap-3.5 xl:gap-4 shrink-0">
+        <div className="hidden lg:flex items-center gap-4 shrink-0">
           
           {/* Real Notification Bell with Live Dropdown & Unread Counter */}
           <NotificationBell />
 
           <Link
             href="/employers"
-            className={`px-3.5 py-2 text-sm font-bold transition rounded-xl ${
+            className={`px-3.5 py-2 text-sm font-semibold transition rounded-full flex items-center gap-1.5 ${
               pathname.startsWith("/employers")
-                ? "text-blue-600 font-extrabold bg-blue-50"
-                : "text-slate-700 hover:text-slate-900 hover:bg-slate-100"
+                ? "text-blue-600 font-extrabold bg-blue-50/80"
+                : "text-slate-700 hover:text-blue-600 hover:bg-slate-100/70"
             }`}
           >
-            For Employers
+            <span>For Employers</span>
           </Link>
+
+          <div className="h-5 w-px bg-slate-200/80 my-auto mx-0.5" />
 
           {candidateUser ? (
             /* Logged In User Profile Dropdown */
@@ -191,26 +193,26 @@ export default function Header() {
               <button
                 type="button"
                 onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                className="flex items-center gap-2.5 rounded-2xl border border-slate-200 bg-slate-50/80 p-1.5 pr-3 hover:bg-slate-100 transition shadow-xs group cursor-pointer"
+                className="flex items-center gap-2.5 rounded-full border border-slate-200 bg-slate-50/90 p-1 pr-3.5 hover:bg-slate-100/80 hover:border-slate-300 transition shadow-xs group cursor-pointer"
               >
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-extrabold text-base shadow-xs group-hover:scale-105 transition">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-extrabold text-sm shadow-xs group-hover:scale-105 transition">
                   {firstLetter}
                 </div>
                 <div className="text-left text-xs leading-tight">
                   <div className="font-extrabold text-slate-900 truncate max-w-[110px]">
                     {candidateUser.name || candidateUser.email.split("@")[0]}
                   </div>
-                  <div className="text-[10px] text-emerald-600 font-semibold flex items-center gap-0.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  <div className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                     <span>Candidate</span>
                   </div>
                 </div>
-                <ChevronDown size={14} className="text-slate-400 group-hover:text-slate-600 transition" />
+                <ChevronDown size={14} className="text-slate-400 group-hover:text-slate-600 transition ml-0.5" />
               </button>
 
               {/* Profile Dropdown Menu */}
               {profileDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                <div className="absolute right-0 mt-2.5 w-56 rounded-2xl border border-slate-200/90 bg-white p-2 shadow-xl z-50 animate-in fade-in slide-in-from-top-2 duration-150">
                   <div className="p-3 border-b border-slate-100 text-xs">
                     <div className="font-extrabold text-slate-900">{candidateUser.name}</div>
                     <div className="text-[11px] text-slate-500 truncate mt-0.5">{candidateUser.email}</div>
@@ -220,7 +222,7 @@ export default function Header() {
                     <Link
                       href="/candidate/dashboard"
                       onClick={() => setProfileDropdownOpen(false)}
-                      className="flex items-center gap-2.5 rounded-xl px-3 py-2 hover:bg-slate-50 hover:text-blue-600 transition"
+                      className="flex items-center gap-2.5 rounded-xl px-3 py-2 hover:bg-blue-50/70 hover:text-blue-600 transition"
                     >
                       <LayoutDashboard size={15} className="text-blue-600" />
                       <span>My Dashboard</span>
@@ -228,7 +230,7 @@ export default function Header() {
                     <Link
                       href="/candidate/applications"
                       onClick={() => setProfileDropdownOpen(false)}
-                      className="flex items-center gap-2.5 rounded-xl px-3 py-2 hover:bg-slate-50 hover:text-blue-600 transition"
+                      className="flex items-center gap-2.5 rounded-xl px-3 py-2 hover:bg-blue-50/70 hover:text-blue-600 transition"
                     >
                       <Briefcase size={15} className="text-blue-600" />
                       <span>My Applications</span>
@@ -249,12 +251,12 @@ export default function Header() {
               )}
             </div>
           ) : (
-            /* Unauthenticated Log in / Sign up Buttons - Cleaned up alignment & padding */
-            <div className="flex items-center gap-2.5">
+            /* Unauthenticated Log in / Sign up Buttons */
+            <div className="flex items-center gap-3">
               <Link
                 href="/login"
-                className={`rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-800 shadow-2xs hover:border-blue-600 hover:text-blue-600 hover:bg-blue-50/50 transition ${
-                  pathname === "/login" ? "border-blue-600 text-blue-600 font-extrabold bg-blue-50" : ""
+                className={`px-4 py-2 text-sm font-bold transition rounded-full hover:bg-slate-100/80 ${
+                  pathname === "/login" ? "text-blue-600 font-extrabold bg-blue-50/80" : "text-slate-700 hover:text-blue-600"
                 }`}
               >
                 Log in
@@ -262,7 +264,7 @@ export default function Header() {
 
               <Link
                 href="/signup"
-                className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-sm px-5 py-2.5 shadow-md shadow-blue-600/20 transition active:scale-95 whitespace-nowrap flex items-center justify-center"
+                className="rounded-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-sm px-5 py-2 shadow-sm shadow-blue-600/20 hover:shadow-md transition active:scale-95 whitespace-nowrap flex items-center justify-center"
               >
                 Sign up
               </Link>
