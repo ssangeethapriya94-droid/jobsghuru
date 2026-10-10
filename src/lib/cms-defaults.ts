@@ -130,4 +130,24 @@ export const DEFAULT_CMS_PAGES: Record<string, { title: string; metaDescription:
       <p>All candidate inquiries and recruiter technical support tickets are reviewed and answered within 2 hours during active business hours.</p>
     `,
   },
+  advertise: {
+    title: "Advertise & Partner With JobsGhuru",
+    metaDescription: "Accelerate recruitment reach with targeted employer branding, sponsored job categories, and premium hiring campaigns.",
+    contentHtml: `
+      <h2>1. Employer Branding & Targeted Talent Campaigns</h2>
+      <p><strong>JobsGhuru</strong> provides enterprise recruiters and growing startups with high-impact employer branding solutions, sponsored job placements, and targeted talent acquisition campaigns reaching over 2 Million active job seekers across India.</p>
+
+      <h2>2. Advertising Solutions</h2>
+      <ul>
+        <li><strong>Sponsored Job Requisitions:</strong> Pin your active engineering, product, or leadership roles to top search positions with 5x higher application visibility.</li>
+        <li><strong>Category & Location Takeovers:</strong> Sponsor specific tech hubs (e.g. Bangalore, Hyderabad, Pune, Remote) or job roles (e.g. AI/ML, Full-Stack, Product Management).</li>
+        <li><strong>Custom Recruiter Email & Notification Blast:</strong> Target qualified candidates based on verified skills, experience level, and immediate availability.</li>
+        <li><strong>Featured Employer Spotlight:</strong> Showcase company culture, engineering blogs, compensation benchmarks, and employee perks to passive candidates.</li>
+      </ul>
+
+      <h2>3. Performance Analytics & Campaign Dashboard</h2>
+      <p>All corporate advertising partners receive access to real-time analytics tracking impression counts, application conversion rates, and ROI metrics across all active campaigns.</p>
+    `,
+  },
 };
+

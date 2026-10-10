@@ -21,7 +21,7 @@ async function getPageData() {
   } catch (e) {
     console.error("Failed to load CMS data", e);
   }
-  return DEFAULT_CMS_PAGES["advertise"];
+  return DEFAULT_CMS_PAGES["advertise"] || DEFAULT_CMS_PAGES["about"];
 }
 
 export default async function AdvertisePage() {
