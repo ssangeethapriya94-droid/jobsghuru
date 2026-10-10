@@ -128,15 +128,43 @@ export default function JobApplicationModal({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, isSubmitting, onClose]);
 
-  // Prevent background scrolling when modal is open
+  // Pre-fill candidate profile when modal opens if logged in
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
+    if (!isOpen) return;
+
+    let isMounted = true;
+    async function loadCandidateProfile() {
+      try {
+        const res = await fetch("/api/candidate/auth/me", { cache: "no-store" });
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted && data.success && data.candidate) {
+            const c = data.candidate;
+            const p = c.profile || {};
+            setFormData((prev) => ({
+              ...prev,
+              fullName: c.name || prev.fullName,
+              email: c.email || prev.email,
+              phone: c.phone || p.phone || prev.phone,
+              location: p.location || prev.location,
+              currentCompany: p.currentCompany || prev.currentCompany,
+              currentRole: p.currentRole || prev.currentRole,
+              totalExpYears: p.totalExpYears !== undefined ? String(p.totalExpYears) : prev.totalExpYears,
+              currentCtc: p.currentCtc !== undefined ? String(p.currentCtc) : prev.currentCtc,
+              expectedCtc: p.expectedCtc !== undefined ? String(p.expectedCtc) : prev.expectedCtc,
+              noticePeriod: p.noticePeriod || prev.noticePeriod,
+              resumeFileName: p.resumeFileName || prev.resumeFileName,
+            }));
+          }
+        }
+      } catch (err) {
+        // Unauthenticated or offline
+      }
     }
+    loadCandidateProfile();
+
     return () => {
-      document.body.style.overflow = "unset";
+      isMounted = false;
     };
   }, [isOpen]);
 

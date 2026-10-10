@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Briefcase,
   Mail,
@@ -19,7 +20,7 @@ import {
   Zap,
 } from "lucide-react";
 
-export default function CandidateSignupPage() {
+function CandidateSignupForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -28,6 +29,9 @@ export default function CandidateSignupPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [signedUp, setSignedUp] = useState(false);
+
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,7 +53,19 @@ export default function CandidateSignupPage() {
         return;
       }
 
-      setSignedUp(true);
+      // Auto login candidate after registration
+      await fetch("/api/candidate/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const redirect = searchParams.get("redirect");
+      if (redirect) {
+        router.push(redirect);
+      } else {
+        setSignedUp(true);
+      }
       setLoading(false);
     } catch {
       setError("Network error. Please try again.");
@@ -256,5 +272,13 @@ export default function CandidateSignupPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CandidateSignupPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen grid place-items-center bg-slate-50"><div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" /></div>}>
+      <CandidateSignupForm />
+    </Suspense>
   );
 }

@@ -56,11 +56,11 @@ export default function Footer() {
   ];
 
   const supportLinks = [
-    { name: "About JobsGuru", href: "/#about" },
-    { name: "Scam-Free Guarantee", href: "/#scam-free" },
+    { name: "About Us", href: "/about" },
     { name: "Privacy Policy", href: "/privacy" },
-    { name: "Terms of Service", href: "/terms" },
-    { name: "Contact Support", href: "mailto:support@jobsghuru.com" },
+    { name: "Terms & Conditions", href: "/terms" },
+    { name: "Disclaimer & Safety", href: "/disclaimer" },
+    { name: "Contact Us", href: "/contact" },
   ];
 
   return (

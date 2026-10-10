@@ -63,15 +63,17 @@ function LoginFormContent() {
       }
 
       setSuccess(true);
+      const redirectTarget = searchParams.get("redirect") || "/candidate/dashboard";
       setTimeout(() => {
-        router.push("/candidate/dashboard");
+        router.push(redirectTarget);
       }, 700);
     } catch (err: any) {
       // Demo fallback mode for offline testing
       if (email === "alex.candidate@example.com" || email.includes("@")) {
         setSuccess(true);
+        const redirectTarget = searchParams.get("redirect") || "/candidate/dashboard";
         setTimeout(() => {
-          router.push("/candidate/dashboard");
+          router.push(redirectTarget);
         }, 700);
       } else {
         setError(err.message || "Login failed. Please check your credentials.");

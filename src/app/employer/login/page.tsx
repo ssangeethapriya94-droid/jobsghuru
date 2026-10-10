@@ -79,8 +79,8 @@ function EmployerLoginForm() {
   };
 
   const handleFillDemo = () => {
-    setEmail("sarah.recruiter@example.com");
-    setPassword("RecruiterPass123!");
+    setEmail("recruiter@northwindlabs.com");
+    setPassword("Recruiter@123");
     setError(null);
   };
 

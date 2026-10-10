@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
-import { BadgeCheck, MapPin, Clock, Wallet, Activity, ArrowRight, Globe } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { BadgeCheck, MapPin, Clock, Wallet, ArrowRight, Globe } from "lucide-react";
 import { ago, salary, modeLabel, typeLabel } from "@/lib/format";
 
 type J = {
@@ -20,7 +23,6 @@ type J = {
   company: { name: string; verified: boolean };
 };
 
-// Deterministic vibrant gradient generator for company logos
 const avatarGradients = [
   "from-blue-600 to-indigo-600",
   "from-emerald-500 to-teal-700",
@@ -37,6 +39,8 @@ function getGradient(name: string) {
 }
 
 export default function JobCard({ job }: { job: J }) {
+  const router = useRouter();
+
   const initials = job.company.name
     .split(" ")
     .map((w) => w[0])
@@ -46,9 +50,9 @@ export default function JobCard({ job }: { job: J }) {
   const gradient = getGradient(job.company.name);
 
   return (
-    <Link
-      href={`/jobs/${job.id}`}
-      className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-indigo-400 hover:shadow-xl hover:shadow-indigo-950/5"
+    <div
+      onClick={() => router.push(`/jobs/${job.id}`)}
+      className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-indigo-400 hover:shadow-xl hover:shadow-indigo-950/5 cursor-pointer"
     >
       {/* Top colorful accent bar on hover */}
       <div className="absolute left-0 top-0 h-1 w-full bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
@@ -121,7 +125,7 @@ export default function JobCard({ job }: { job: J }) {
         </div>
       </div>
 
-      {/* Footer: Posted time + Recruiter response rate with live pulse + Quick Apply CTA */}
+      {/* Footer: Posted time + Recruiter response rate + Apply CTA */}
       <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-3 text-xs text-slate-500">
         <span>Posted {ago(job.postedAt)}</span>
         <div className="flex items-center gap-3">
@@ -132,12 +136,19 @@ export default function JobCard({ job }: { job: J }) {
             </span>
             {job.responseRatePct}% response rate
           </span>
-          <span className="inline-flex items-center gap-1 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-1 text-xs font-bold text-white shadow-xs opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              router.push(`/jobs/${job.id}?apply=1`);
+            }}
+            className="inline-flex items-center gap-1 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-1 text-xs font-bold text-white shadow-xs opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all cursor-pointer"
+          >
             <span>Apply</span>
             <ArrowRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
-          </span>
+          </button>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }

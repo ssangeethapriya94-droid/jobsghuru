@@ -42,6 +42,7 @@ import {
   X,
   PanelLeftClose,
   PanelLeftOpen,
+  Mail,
 } from "lucide-react";
 
 interface SidebarGroup {
@@ -50,7 +51,7 @@ interface SidebarGroup {
     label: string;
     href: string;
     icon: any;
-    badge?: number;
+    badge?: string | number;
     badgeColor?: string;
   }[];
 }
@@ -65,6 +66,15 @@ const SIDEBAR_GROUPS: SidebarGroup[] = [
       { label: "Companies", href: "/admin/companies", icon: Building2 },
       { label: "Jobs", href: "/admin/jobs", icon: Briefcase },
       { label: "Applications", href: "/admin/applications", icon: FileSpreadsheet },
+    ],
+  },
+  {
+    name: "GROWTH & COMMERCIAL",
+    items: [
+      { label: "Payment Gateway & UPI", href: "/admin/payments", icon: CreditCard, badge: "UPI", badgeColor: "bg-blue-600 shadow-blue-500/30" },
+      { label: "Email & SMTP Gateway", href: "/admin/smtp", icon: Mail, badge: "SMTP", badgeColor: "bg-emerald-600 shadow-emerald-500/30" },
+      { label: "Subscriptions & Plans", href: "/admin/subscriptions", icon: Receipt },
+      { label: "Featured Jobs", href: "/admin/promotions", icon: Sparkles },
     ],
   },
   {
@@ -109,15 +119,6 @@ const SIDEBAR_GROUPS: SidebarGroup[] = [
     ],
   },
   {
-    name: "BUSINESS",
-    items: [
-      { label: "Subscriptions", href: "/admin/subscriptions", icon: CreditCard },
-      { label: "Payments", href: "/admin/payments", icon: Receipt },
-      { label: "Featured Jobs", href: "/admin/promotions", icon: Sparkles },
-      { label: "Advertisements", href: "/admin/ads", icon: Megaphone },
-    ],
-  },
-  {
     name: "ANALYTICS",
     items: [
       { label: "Platform Analytics", href: "/admin/analytics", icon: BarChart3 },
@@ -129,6 +130,7 @@ const SIDEBAR_GROUPS: SidebarGroup[] = [
   {
     name: "SYSTEM",
     items: [
+      { label: "Website Pages CMS", href: "/admin/cms", icon: FileText },
       { label: "Notifications", href: "/admin/notifications", icon: Bell },
       { label: "Admin Users", href: "/admin/admin-users", icon: UserCog },
       { label: "Roles & Permissions", href: "/admin/permissions", icon: KeyRound },

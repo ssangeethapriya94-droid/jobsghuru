@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { getCurrentAdmin } from "@/lib/admin/auth";
 import AdminLayoutClient from "@/components/admin/AdminLayoutClient";
-
 import { headers } from "next/headers";
 
 export const metadata = {
@@ -18,15 +17,15 @@ export default async function AdminRootLayout({
   const headersList = headers();
   const pathname = headersList.get("x-pathname") || "";
 
+  // If user is not logged in AND visiting /admin/login, render standalone login screen without sidebar
   if (!admin) {
-    // Show standalone login screen without sidebar on /admin/login
-    if (pathname === "/admin/login") {
+    if (pathname === "/admin/login" || pathname.endsWith("/admin/login")) {
       return <>{children}</>;
     }
-    // Redirect unauthenticated / invalid admin session access to admin login page
     redirect("/admin/login");
   }
 
+  // Authenticated admin: Always render AdminLayoutClient (with Sidebar + Header)
   return (
     <AdminLayoutClient
       adminUser={{
@@ -39,3 +38,5 @@ export default async function AdminRootLayout({
     </AdminLayoutClient>
   );
 }
+
+

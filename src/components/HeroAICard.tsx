@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Sparkles, ArrowRight, Bot, Zap, MessageSquareCode } from "lucide-react";
+import CandidateAuthModal from "./CandidateAuthModal";
 
 const QUICK_PROMPTS = [
   "Remote React Jobs",
@@ -15,15 +16,34 @@ const QUICK_PROMPTS = [
 export default function HeroAICard() {
   const router = useRouter();
   const [query, setQuery] = useState("");
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [pendingText, setPendingText] = useState("");
+
+  const checkAuthAndExecute = async (text: string) => {
+    try {
+      const res = await fetch("/api/candidate/auth/me", { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.candidate) {
+          router.push(`/career-ai?q=${encodeURIComponent(text)}`);
+          return;
+        }
+      }
+    } catch (err) {
+      // Unauthenticated
+    }
+    setPendingText(text);
+    setIsAuthModalOpen(true);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const text = query.trim() || "Remote React Jobs";
-    router.push(`/career-ai?q=${encodeURIComponent(text)}`);
+    checkAuthAndExecute(text);
   };
 
   const handlePromptClick = (prompt: string) => {
-    router.push(`/career-ai?q=${encodeURIComponent(prompt)}`);
+    checkAuthAndExecute(prompt);
   };
 
   return (
@@ -109,6 +129,16 @@ export default function HeroAICard() {
           ))}
         </div>
       </div>
+
+      {/* CANDIDATE LOGIN MODAL FOR AI FEATURE ACCESS */}
+      <CandidateAuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onSuccess={() => {
+          setIsAuthModalOpen(false);
+          router.push(`/career-ai?q=${encodeURIComponent(pendingText || "Remote React Jobs")}`);
+        }}
+      />
     </div>
   );
 }

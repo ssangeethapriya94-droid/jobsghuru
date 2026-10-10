@@ -156,15 +156,13 @@ export default function AdminJobsView({
           </div>
 
           {/* Post New Job Card Button */}
-          {!filterOnlyModeration && (
-            <button
-              onClick={() => setIsCreateJobModalOpen(true)}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-600/25 transition active:scale-95 cursor-pointer shrink-0"
-            >
-              <Plus size={15} />
-              <span>Post New Job Card</span>
-            </button>
-          )}
+          <button
+            onClick={() => setIsCreateJobModalOpen(true)}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-600/25 transition active:scale-95 cursor-pointer shrink-0"
+          >
+            <Plus size={15} />
+            <span>Post New Job Card</span>
+          </button>
         </div>
       </div>
 

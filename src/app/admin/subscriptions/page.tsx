@@ -13,7 +13,7 @@ export default async function AdminSubscriptionsPage() {
     redirect("/admin/login");
   }
 
-  const [plans, subscriptions, payments] = await Promise.all([
+  const [plans, subscriptions, payments, groupedJobs, setting] = await Promise.all([
     db.plan.findMany({ orderBy: { priceInr: "asc" } }),
     db.subscription.findMany({
       orderBy: { createdAt: "desc" },
@@ -27,7 +27,23 @@ export default async function AdminSubscriptionsPage() {
       include: { company: { select: { name: true } } },
       take: 60,
     }),
+    db.job.groupBy({
+      by: ["department"],
+      _count: { id: true },
+    }),
+    db.systemSetting.findUnique({
+      where: { key: "CATEGORY_PLAN_RESTRICTIONS" },
+    }),
   ]);
+
+  let savedRestrictions: Record<string, string> = {};
+  if (setting?.value) {
+    try {
+      savedRestrictions = JSON.parse(setting.value);
+    } catch (e) {
+      console.error("Failed to parse CATEGORY_PLAN_RESTRICTIONS json", e);
+    }
+  }
 
   const serializedPlans = plans.map((p) => ({
     id: p.id,
@@ -64,12 +80,27 @@ export default async function AdminSubscriptionsPage() {
     createdAt: p.createdAt.toISOString(),
   }));
 
+  const categories = groupedJobs.map((g, index) => {
+    const deptName = g.department || "General Requisitions";
+    const code = deptName.toUpperCase().replace(/[^A-Z0-9]/g, "_").slice(0, 8);
+    const requiredPlan = savedRestrictions[deptName] || "ALL";
+
+    return {
+      id: `cat-${index + 1}`,
+      name: deptName,
+      code,
+      jobCount: g._count.id,
+      requiredPlan,
+      status: "Active",
+    };
+  });
+
   return (
     <AdminBillingView
       plans={serializedPlans}
       subscriptions={serializedSubs}
       payments={serializedPayments}
-      initialTab="subscriptions"
+      initialTab="plans"
     />
   );
 }

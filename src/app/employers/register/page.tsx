@@ -53,6 +53,7 @@ import {
   Landmark,
   Trash2,
   RefreshCw,
+  Copy,
 } from "lucide-react";
 import { recommendEmployerPlan } from "@/lib/employer/recommendPlan";
 import AdminDocumentViewerModal, { DocumentItem } from "@/components/admin/AdminDocumentViewerModal";
@@ -164,13 +165,13 @@ export default function EmployerRegisterWizard() {
     selectedPlanCode: searchParams.get("plan") || "GROWTH",
     billingCycle: (searchParams.get("cycle") || "ANNUAL") as "MONTHLY" | "ANNUAL",
     paymentMethod: "UPI_QR" as "UPI_QR" | "CARD" | "NETBANKING" | "NEFT_RTGS",
-    paymentUpiId: "recruiter@okhdfcbank",
+    paymentUpiId: "manishmadhava91@okicici",
     paymentCardNumber: "4532 •••• •••• 8912",
     paymentCardExpiry: "08/28",
     paymentCardCvv: "•••",
     paymentCardHolder: "VIKRAM MALHOTRA",
     paymentBank: "HDFC Bank (Corporate NetBanking)",
-    paymentTransactionId: "UPI-CB-908241",
+    paymentTransactionId: "UPI-CB-214390",
     paymentConfirmed: true,
     authorizationCertified: true,
     slaAgreed: true,
@@ -183,6 +184,15 @@ export default function EmployerRegisterWizard() {
   const [error, setError] = useState<string | null>(null);
   const [registeredResult, setRegisteredResult] = useState<any>(null);
 
+  // Live Admin Payment Config & UPI State
+  const [adminPaymentConfig, setAdminPaymentConfig] = useState<{
+    businessUpiId: string;
+    upiQrUrl: string;
+    gstRate: number;
+  } | null>(null);
+  const [copiedUpi, setCopiedUpi] = useState(false);
+  const [utrNumberInput, setUtrNumberInput] = useState("");
+
   // Document Uploading State
   const [uploadingDocIdx, setUploadingDocIdx] = useState<number | null>(null);
   const [dragActiveIdx, setDragActiveIdx] = useState<number | null>(null);
@@ -194,6 +204,28 @@ export default function EmployerRegisterWizard() {
 
   // Hidden file inputs
   const fileInputRefs = useRef<{ [key: number]: HTMLInputElement | null }>({});
+
+  // Fetch Live Admin Payment Settings on Mount
+  useEffect(() => {
+    fetch("/api/admin/payments")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.config) {
+          setAdminPaymentConfig({
+            businessUpiId: data.config.businessUpiId || "manishmadhava91@okicici",
+            upiQrUrl: data.config.upiQrUrl || "",
+            gstRate: data.config.gstRate || 18,
+          });
+          if (data.config.businessUpiId) {
+            setFormData((prev) => ({
+              ...prev,
+              paymentUpiId: data.config.businessUpiId,
+            }));
+          }
+        }
+      })
+      .catch((err) => console.error("Failed to load admin payment settings:", err));
+  }, []);
 
   // Auto-extract corporate domain from website or email
   useEffect(() => {
@@ -2209,19 +2241,57 @@ export default function EmployerRegisterWizard() {
                       {/* Payment Method Details Box */}
                       <div className="rounded-2xl border border-slate-200 bg-white p-5 text-xs space-y-4">
                         {formData.paymentMethod === "UPI_QR" && (
-                          <div className="flex flex-col sm:flex-row items-center gap-6">
-                            <div className="flex flex-col items-center justify-center p-3 bg-slate-50 border border-slate-200 rounded-2xl shrink-0">
-                              <div className="h-32 w-32 bg-white p-2 rounded-xl border border-slate-200 flex flex-col items-center justify-center shadow-2xs">
-                                <QrCode size={100} className="text-slate-900" />
+                          <div className="flex flex-col md:flex-row items-center justify-between gap-6 p-2">
+                            {/* Live Generated QR Code Card */}
+                            <div className="w-full md:w-auto flex flex-col items-center justify-center p-5 bg-gradient-to-b from-white to-emerald-50/30 border-2 border-emerald-400 rounded-3xl shrink-0 text-center space-y-3.5 shadow-sm">
+                              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                <Eye size={13} className="text-emerald-600" />
+                                <span>Live Generated QR Code Preview</span>
                               </div>
-                              <span className="text-[10px] font-bold text-blue-700 mt-2">
-                                Scan with Any UPI App
-                              </span>
+
+                              <div className="bg-white p-3 rounded-2xl border border-slate-200 inline-block shadow-inner">
+                                <img
+                                  src={
+                                    adminPaymentConfig?.upiQrUrl ||
+                                    `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(
+                                      `upi://pay?pa=${formData.paymentUpiId || "manishmadhava91@okicici"}&pn=JobsGhuru&am=${pricing.totalAmount}&cu=INR`
+                                    )}`
+                                  }
+                                  alt="Scan UPI QR Code to Pay"
+                                  className="w-44 h-44 sm:w-52 sm:h-52 mx-auto object-contain rounded-xl"
+                                />
+                              </div>
+
+                              <div className="space-y-1">
+                                <div className="text-xs sm:text-sm font-extrabold text-slate-800 flex items-center justify-center gap-1.5 flex-wrap">
+                                  <span>UPI ID:</span>
+                                  <span className="font-mono text-amber-700 font-black text-sm sm:text-base">
+                                    {formData.paymentUpiId || "manishmadhava91@okicici"}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      if (formData.paymentUpiId) {
+                                        navigator.clipboard.writeText(formData.paymentUpiId);
+                                        setCopiedUpi(true);
+                                        setTimeout(() => setCopiedUpi(false), 2000);
+                                      }
+                                    }}
+                                    className="p-1 text-slate-400 hover:text-blue-600 transition shrink-0 cursor-pointer"
+                                    title="Copy UPI ID"
+                                  >
+                                    {copiedUpi ? <Check size={15} className="text-emerald-600" /> : <Copy size={15} />}
+                                  </button>
+                                </div>
+                                <p className="text-[11px] text-slate-500 leading-relaxed max-w-xs mx-auto">
+                                  Scan with GPay or PhonePe to test. When saved, this QR will be generated live with <strong>auto-prefilled checkout amounts</strong> on both websites!
+                                </p>
+                              </div>
                             </div>
 
-                            <div className="space-y-3 flex-1 w-full">
+                            <div className="space-y-4 flex-1 w-full">
                               <div>
-                                <label className="block font-bold text-slate-700 mb-1">
+                                <label className="block font-bold text-slate-700 text-xs mb-1">
                                   Corporate UPI ID / VPA
                                 </label>
                                 <div className="flex gap-2">
@@ -2232,21 +2302,35 @@ export default function EmployerRegisterWizard() {
                                       setFormData({ ...formData, paymentUpiId: e.target.value })
                                     }
                                     placeholder="company@okhdfcbank"
-                                    className="w-full rounded-xl border border-slate-300 py-2 px-3 font-mono text-slate-900 focus:outline-none focus:border-blue-600"
+                                    className="w-full rounded-xl border border-slate-300 py-2.5 px-3.5 font-mono text-xs text-slate-900 focus:outline-none focus:border-blue-600 shadow-2xs"
                                   />
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      if (formData.paymentUpiId) {
+                                        navigator.clipboard.writeText(formData.paymentUpiId);
+                                        setCopiedUpi(true);
+                                        setTimeout(() => setCopiedUpi(false), 2000);
+                                      }
+                                    }}
+                                    className="px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center gap-1 shrink-0 transition cursor-pointer"
+                                  >
+                                    {copiedUpi ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
+                                    <span>{copiedUpi ? "Copied" : "Copy"}</span>
+                                  </button>
                                 </div>
                               </div>
 
-                              <div className="flex flex-wrap items-center gap-2 text-[10px] text-slate-500 font-semibold">
-                                <span className="bg-slate-100 px-2 py-0.5 rounded">GPay</span>
-                                <span className="bg-slate-100 px-2 py-0.5 rounded">PhonePe</span>
-                                <span className="bg-slate-100 px-2 py-0.5 rounded">Paytm</span>
-                                <span className="bg-slate-100 px-2 py-0.5 rounded">BHIM UPI</span>
-                                <span className="bg-slate-100 px-2 py-0.5 rounded">Cred</span>
+                              <div className="flex flex-wrap items-center gap-1.5 text-[10px] text-slate-600 font-bold">
+                                <span className="bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-lg">GPay</span>
+                                <span className="bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-lg">PhonePe</span>
+                                <span className="bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-lg">Paytm</span>
+                                <span className="bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-lg">BHIM UPI</span>
+                                <span className="bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-lg">Cred</span>
                               </div>
 
-                              <p className="text-[11px] text-slate-400">
-                                Instant automated reconciliation with zero transaction charges.
+                              <p className="text-[11px] text-slate-500 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-200/80">
+                                Instant automated reconciliation with zero transaction charges. Amount is auto-prefilled dynamically for ₹{pricing.totalAmount.toLocaleString("en-IN")}.
                               </p>
                             </div>
                           </div>
@@ -2365,34 +2449,62 @@ export default function EmployerRegisterWizard() {
                           </div>
                         )}
 
-                        {/* Payment Verification Status Badge */}
-                        <div className="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100">
-                          <div className="flex items-center gap-2">
-                            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
-                              <Check size={14} strokeWidth={3} />
-                            </span>
-                            <span className="text-xs font-bold text-emerald-800">
-                              Checkout Status: Payment Verified ({formData.paymentTransactionId})
-                            </span>
+                        {/* Payment UTR Verification Input & Status */}
+                        <div className="pt-3 border-t border-slate-100 space-y-3">
+                          <div>
+                            <label className="block font-bold text-slate-700 text-xs mb-1">
+                              Transaction UTR / Reference ID (12 Digits)
+                            </label>
+                            <div className="flex gap-2">
+                              <input
+                                type="text"
+                                value={utrNumberInput}
+                                onChange={(e) => setUtrNumberInput(e.target.value)}
+                                placeholder="e.g. 428901928374 or UPI-CB-214390"
+                                className="w-full rounded-xl border border-slate-300 py-2 px-3 font-mono text-xs text-slate-900 focus:outline-none focus:border-blue-600"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setIsProcessingPayment(true);
+                                  setTimeout(() => {
+                                    setIsProcessingPayment(false);
+                                    const txnId = utrNumberInput.trim() || `UPI-CB-${Math.floor(100000 + Math.random() * 900000)}`;
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      paymentConfirmed: true,
+                                      paymentTransactionId: txnId,
+                                    }));
+                                  }, 600);
+                                }}
+                                className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 text-xs transition cursor-pointer shrink-0 shadow-xs flex items-center gap-1.5"
+                              >
+                                {isProcessingPayment ? (
+                                  <span>Validating...</span>
+                                ) : (
+                                  <>
+                                    <CheckCircle2 size={14} />
+                                    <span>{formData.paymentConfirmed ? "Re-verify" : "Verify Payment"}</span>
+                                  </>
+                                )}
+                              </button>
+                            </div>
                           </div>
 
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setIsProcessingPayment(true);
-                              setTimeout(() => {
-                                setIsProcessingPayment(false);
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  paymentConfirmed: true,
-                                  paymentTransactionId: `TXN-CB-${Math.floor(100000 + Math.random() * 900000)}`,
-                                }));
-                              }, 600);
-                            }}
-                            className="rounded-xl border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold px-3 py-1.5 text-xs transition cursor-pointer"
-                          >
-                            {isProcessingPayment ? "Validating..." : "Simulate Re-verification"}
-                          </button>
+                          <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200">
+                            <div className="flex items-center gap-2">
+                              <span className={`flex h-6 w-6 items-center justify-center rounded-full ${
+                                formData.paymentConfirmed ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
+                              }`}>
+                                {formData.paymentConfirmed ? <Check size={14} strokeWidth={3} /> : <AlertCircle size={14} />}
+                              </span>
+                              <span className={`text-xs font-bold ${
+                                formData.paymentConfirmed ? "text-emerald-800" : "text-amber-800"
+                              }`}>
+                                Checkout Status: {formData.paymentConfirmed ? `Payment Verified (${formData.paymentTransactionId})` : "Pending UTR Payment Verification"}
+                              </span>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>

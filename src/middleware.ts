@@ -2,16 +2,15 @@ import { NextResponse, type NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-pathname", pathname);
 
   // 1. Platform Admin workspace protection (/admin/*)
   if (pathname.startsWith("/admin")) {
     const sessionToken = request.cookies.get("cb_admin_session")?.value;
 
     if (pathname === "/admin/login") {
-      if (sessionToken) {
-        return NextResponse.redirect(new URL("/admin/dashboard", request.url));
-      }
-      return NextResponse.next();
+      return NextResponse.next({ request: { headers: requestHeaders } });
     }
 
     if (!sessionToken) {
@@ -38,10 +37,7 @@ export function middleware(request: NextRequest) {
       pathname === "/employer/reset-password";
 
     if (isPublicEmployerRoute) {
-      if (employerSessionToken && pathname === "/employer/login") {
-        return NextResponse.redirect(new URL("/employer/dashboard", request.url));
-      }
-      return NextResponse.next();
+      return NextResponse.next({ request: { headers: requestHeaders } });
     }
 
     if (pathname === "/employer") {
@@ -74,12 +70,8 @@ export function middleware(request: NextRequest) {
 
     const candidateSessionToken = request.cookies.get("cb_candidate_session")?.value;
 
-    // If authenticated candidate goes to login or signup, redirect to candidate dashboard
     if (pathname === "/candidate/login" || pathname === "/candidate/signup") {
-      if (candidateSessionToken) {
-        return NextResponse.redirect(new URL("/candidate/dashboard", request.url));
-      }
-      return NextResponse.next();
+      return NextResponse.next({ request: { headers: requestHeaders } });
     }
 
     // If candidate visits bare /candidate
@@ -100,9 +92,6 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  const requestHeaders = new Headers(request.headers);
-  requestHeaders.set("x-pathname", pathname);
-
   return NextResponse.next({
     request: {
       headers: requestHeaders,
@@ -113,3 +102,4 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: ["/admin/:path*", "/employer/:path*", "/candidate/:path*"],
 };
+

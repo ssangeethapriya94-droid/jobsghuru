@@ -37,7 +37,9 @@ import {
   ThumbsUp,
   FileCheck,
 } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import JobApplicationModal from "./JobApplicationModal";
+import CandidateAuthModal from "./CandidateAuthModal";
 import { modeLabel, typeLabel, salary, ago } from "@/lib/format";
 
 interface CompanyData {
@@ -152,7 +154,9 @@ export default function JobDetailClient({
     mode: string;
   };
 }) {
+  const searchParams = useSearchParams();
   const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [appliedInfo, setAppliedInfo] = useState<{
     applicationId: string;
@@ -162,6 +166,31 @@ export default function JobDetailClient({
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [showStickyBar, setShowStickyBar] = useState(false);
   const [activeTab, setActiveTab] = useState<"overview" | "responsibilities" | "skills" | "benefits" | "company">("overview");
+
+  // Handler to enforce candidate authentication before applying
+  const handleApplyClick = async () => {
+    try {
+      const res = await fetch("/api/candidate/auth/me", { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.candidate) {
+          setIsApplyModalOpen(true);
+          return;
+        }
+      }
+    } catch (err) {
+      // Unauthenticated
+    }
+    setIsAuthModalOpen(true);
+  };
+
+  useEffect(() => {
+    // Check if URL has ?apply=1 or ?apply=true
+    const shouldApplyNow = searchParams.get("apply") === "1" || searchParams.get("apply") === "true";
+    if (shouldApplyNow) {
+      handleApplyClick();
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     try {
@@ -436,7 +465,7 @@ export default function JobDetailClient({
                 </div>
               ) : (
                 <button
-                  onClick={() => setIsApplyModalOpen(true)}
+                  onClick={handleApplyClick}
                   className="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 px-8 py-4 text-base font-bold text-white shadow-xl shadow-blue-500/25 transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:shadow-blue-500/35 active:scale-95 cursor-pointer w-full sm:w-auto"
                 >
                   <span className="absolute -inset-x-full top-0 h-full w-1/2 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12 transition-all duration-700 group-hover:inset-x-full" />
@@ -1042,7 +1071,7 @@ export default function JobDetailClient({
 
                 <button
                   type="button"
-                  onClick={() => setIsApplyModalOpen(true)}
+                  onClick={handleApplyClick}
                   className="w-full rounded-xl bg-blue-600 hover:bg-blue-700 py-2.5 text-xs font-bold text-white shadow-xs transition active:scale-95 text-center flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <span>Apply with This Profile</span>
@@ -1238,7 +1267,7 @@ export default function JobDetailClient({
               </span>
             ) : (
               <button
-                onClick={() => setIsApplyModalOpen(true)}
+                onClick={handleApplyClick}
                 className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 px-6 py-2.5 text-sm font-bold text-white shadow-md transition active:scale-95 cursor-pointer"
               >
                 <span>Apply Now</span>
@@ -1248,6 +1277,18 @@ export default function JobDetailClient({
           </div>
         </div>
       </div>
+
+      {/* CANDIDATE AUTHENTICATION MODAL */}
+      <CandidateAuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onSuccess={() => {
+          setIsAuthModalOpen(false);
+          setIsApplyModalOpen(true);
+        }}
+        jobTitle={job.title}
+        companyName={job.company.name}
+      />
 
       {/* STATE-OF-THE-ART APPLICATION MODAL */}
       <JobApplicationModal

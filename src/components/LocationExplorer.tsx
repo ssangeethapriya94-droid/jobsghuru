@@ -1,7 +1,25 @@
+"use me";
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
-import { MapPin, Globe, ArrowRight, Building, Laptop, Compass, CheckCircle2 } from "lucide-react";
+import {
+  MapPin,
+  Globe,
+  ArrowRight,
+  Building,
+  Laptop,
+  Compass,
+  CheckCircle2,
+  Sparkles,
+  Cloud,
+  Code2,
+  Briefcase,
+  Navigation,
+} from "lucide-react";
 
 interface CityLocation {
+  id: string;
   name: string;
   query: string;
   state: string;
@@ -9,142 +27,229 @@ interface CityLocation {
   highlight: string;
   mode: string;
   isRemote?: boolean;
+  category: "remote" | "south" | "west";
+  tag: string;
+  gradient: string;
+  icon: any;
+  accentBg: string;
 }
 
 const featuredLocations: CityLocation[] = [
   {
+    id: "remote",
     name: "Remote / Pan-India",
     query: "Remote",
-    state: "Apply from any city",
+    state: "Apply from any city in India",
     jobsCount: 8,
-    highlight: "100% remote flexibility with verified equipment stipends",
+    highlight: "100% remote flexibility with verified home-office equipment stipends & flexible hours.",
     mode: "Work From Anywhere",
     isRemote: true,
+    category: "remote",
+    tag: "🌐 100% Remote",
+    gradient: "from-blue-600 to-indigo-600",
+    icon: Globe,
+    accentBg: "bg-blue-500/10 border-blue-200 text-blue-700",
   },
   {
-    name: "Chennai",
-    query: "Chennai",
-    state: "Tamil Nadu",
-    jobsCount: 8,
-    highlight: "SaaS hub, Fintech, Healthtech & Core Engineering",
-    mode: "On-site & Hybrid",
-  },
-  {
+    id: "bengaluru",
     name: "Bengaluru",
     query: "Bengaluru",
     state: "Karnataka",
     jobsCount: 4,
-    highlight: "Fintech, AI Research & High-Growth Startups",
+    highlight: "India's Silicon Valley. AI Research, Fintech, SaaS Unicorns & DeepTech Engineering.",
     mode: "On-site & Hybrid",
+    category: "south",
+    tag: "⚡ Tech Capital",
+    gradient: "from-violet-600 to-purple-600",
+    icon: Sparkles,
+    accentBg: "bg-purple-500/10 border-purple-200 text-purple-700",
   },
   {
+    id: "hyderabad",
     name: "Hyderabad",
     query: "Hyderabad",
     state: "Telangana",
     jobsCount: 4,
-    highlight: "Cloud infrastructure, DevOps & Enterprise E-commerce",
+    highlight: "Cyberabad Cloud Hub. Cloud Infrastructure, DevOps & Global Tech Captives.",
     mode: "On-site & Hybrid",
+    category: "south",
+    tag: "☁️ Cloud & DevOps",
+    gradient: "from-cyan-600 to-blue-600",
+    icon: Cloud,
+    accentBg: "bg-cyan-500/10 border-cyan-200 text-cyan-700",
   },
   {
+    id: "chennai",
+    name: "Chennai",
+    query: "Chennai",
+    state: "Tamil Nadu",
+    jobsCount: 8,
+    highlight: "SaaS Capital of India. Global Enterprise Product Hubs & Core Engineering.",
+    mode: "On-site & Hybrid",
+    category: "south",
+    tag: "💻 SaaS & Product",
+    gradient: "from-emerald-600 to-teal-600",
+    icon: Code2,
+    accentBg: "bg-emerald-500/10 border-emerald-200 text-emerald-700",
+  },
+  {
+    id: "mumbai",
     name: "Mumbai",
     query: "Mumbai",
     state: "Maharashtra",
     jobsCount: 4,
-    highlight: "Logistics, Supply Chain & Enterprise Platforms",
+    highlight: "Financial & Commercial Center. BFSI, Fintech, Enterprise Platforms & Logistics.",
     mode: "On-site & Hybrid",
+    category: "west",
+    tag: "🏢 BFSI & Fintech",
+    gradient: "from-amber-600 to-orange-600",
+    icon: Briefcase,
+    accentBg: "bg-amber-500/10 border-amber-200 text-amber-800",
   },
   {
+    id: "pune",
     name: "Pune",
     query: "Pune",
     state: "Maharashtra",
     jobsCount: 4,
-    highlight: "Data Analytics, AI Modelling & Product Design",
+    highlight: "Automotive & Data Analytics Capital. AI Modelling, Product Design & Engineering.",
     mode: "On-site & Hybrid",
+    category: "west",
+    tag: "📊 Data & AI Hub",
+    gradient: "from-rose-600 to-pink-600",
+    icon: Compass,
+    accentBg: "bg-rose-500/10 border-rose-200 text-rose-700",
   },
 ];
 
 export default function LocationExplorer({ title, subtitle }: { title?: string; subtitle?: string }) {
+  const [activeTab, setActiveTab] = useState<"all" | "remote" | "south" | "west">("all");
+
+  const filteredLocations = featuredLocations.filter((loc) => {
+    if (activeTab === "all") return true;
+    return loc.category === activeTab;
+  });
+
   return (
-    <section className="container-x my-16 scroll-mt-24">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 border-b border-slate-200/80 pb-6">
-        <div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50/80 px-3 py-1 text-xs font-bold text-blue-700">
-            <Compass size={13} className="text-blue-600" />
-            <span>Multi-Location Career Hub</span>
+    <section className="container-x my-16 scroll-mt-24 font-sans">
+      {/* Header with Glass Gradient Accent */}
+      <div className="relative rounded-3xl bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 p-6 sm:p-8 text-white shadow-xl overflow-hidden mb-8">
+        <div className="absolute -right-10 -bottom-10 h-64 w-64 rounded-full bg-blue-600/20 blur-3xl pointer-events-none" />
+        <div className="absolute right-1/3 -top-10 h-40 w-40 rounded-full bg-indigo-500/15 blur-2xl pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-2 rounded-full border border-blue-400/30 bg-blue-500/10 px-3.5 py-1 text-xs font-bold text-blue-300 backdrop-blur-md">
+              <Navigation size={13} className="text-blue-400 animate-pulse" />
+              <span>Pan-India Career Locations</span>
+            </div>
+            <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white">
+              {title || "Explore Jobs by Location & City"}
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
+              {subtitle || "Candidates from all locations across India can apply to verified roles in tech capitals or work 100% remotely."}
+            </p>
           </div>
-          <h2 className="mt-3 font-display text-2xl font-extrabold text-slate-900 sm:text-3xl">
-            {title || "Explore Jobs by Location & City"}
-          </h2>
-          <p className="mt-1.5 text-sm text-slate-600 max-w-2xl">
-            {subtitle || "Candidates from all locations across India can apply to verified roles in tech capitals or work 100% remotely."}
-          </p>
+
+          <Link
+            href="/jobs"
+            className="inline-flex items-center gap-2 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 px-5 py-3 text-xs sm:text-sm font-extrabold text-white backdrop-blur-md transition shadow-md hover:scale-105 shrink-0"
+          >
+            <span>View all 24 openings</span>
+            <ArrowRight size={16} />
+          </Link>
         </div>
 
-        <Link
-          href="/jobs"
-          className="inline-flex items-center gap-1.5 text-sm font-bold text-blue-600 hover:text-blue-800 transition"
-        >
-          View all 24 openings <ArrowRight size={15} />
-        </Link>
+        {/* Interactive Filter Pills */}
+        <div className="relative z-10 mt-6 pt-6 border-t border-white/10 flex flex-wrap items-center gap-2">
+          {[
+            { id: "all", label: "All Career Hubs", count: 32 },
+            { id: "remote", label: "🌐 100% Remote Roles", count: 8 },
+            { id: "south", label: "⚡ South Tech Hubs (BLR, HYD, MAA)", count: 16 },
+            { id: "west", label: "🏢 West Enterprise Hubs (BOM, PNQ)", count: 8 },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id as any)}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                activeTab === tab.id
+                  ? "bg-blue-600 text-white shadow-md ring-2 ring-blue-400/30 font-extrabold"
+                  : "bg-white/5 hover:bg-white/15 text-slate-300 border border-white/10"
+              }`}
+            >
+              {tab.label} ({tab.count})
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Grid of Cities */}
-      <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 3xl:grid-cols-6">
-        {featuredLocations.map((loc) => {
+      {/* Grid of Cities - 6 Columns on XL */}
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        {filteredLocations.map((loc) => {
+          const LocIcon = loc.icon;
           return (
             <Link
               key={loc.name}
               href={`/jobs?location=${encodeURIComponent(loc.query)}`}
-              className={`group relative flex flex-col justify-between overflow-hidden rounded-2xl border p-5 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg ${
+              className={`group relative flex flex-col justify-between overflow-hidden rounded-3xl border p-5 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl ${
                 loc.isRemote
-                  ? "border-blue-300 bg-gradient-to-br from-blue-50/80 via-white to-white hover:border-blue-500 hover:shadow-blue-500/10"
-                  : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-slate-900/5"
+                  ? "border-blue-300 bg-gradient-to-b from-blue-50/90 via-white to-white hover:border-blue-600 hover:shadow-blue-600/15 ring-1 ring-blue-500/20"
+                  : "border-slate-200/90 bg-white hover:border-blue-500 hover:shadow-slate-900/10"
               }`}
             >
               <div>
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`grid h-11 w-11 place-items-center rounded-xl text-white shadow-xs ${
-                        loc.isRemote
-                          ? "bg-blue-600"
-                          : "bg-slate-900 group-hover:bg-blue-600 transition-colors"
-                      }`}
-                    >
-                      {loc.isRemote ? <Globe size={20} /> : <MapPin size={20} />}
-                    </div>
-                    <div>
-                      <h3 className="font-display text-base font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
-                        {loc.name}
-                      </h3>
-                      <p className="text-xs text-slate-500 font-medium">{loc.state}</p>
-                    </div>
+                {/* Header Icon + Jobs Badge */}
+                <div className="flex items-start justify-between gap-2">
+                  <div
+                    className={`flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr ${loc.gradient} text-white shadow-md transition-transform duration-300 group-hover:scale-110 shrink-0`}
+                  >
+                    <LocIcon size={22} />
                   </div>
 
                   <span
-                    className={`rounded-full px-2.5 py-1 text-xs font-bold shrink-0 ${
+                    className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-extrabold shrink-0 ${
                       loc.isRemote
-                        ? "bg-blue-100 text-blue-800"
-                        : "bg-slate-100 text-slate-700 group-hover:bg-blue-50 group-hover:text-blue-700 transition-colors"
+                        ? "bg-blue-600 text-white shadow-2xs"
+                        : "bg-slate-100 text-slate-800 group-hover:bg-blue-50 group-hover:text-blue-700 transition-colors"
                     }`}
                   >
-                    {loc.jobsCount} Jobs
+                    {loc.isRemote && <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" />}
+                    <span>{loc.jobsCount} Jobs</span>
                   </span>
                 </div>
 
-                <p className="mt-4 text-xs text-slate-600 leading-relaxed font-medium">
+                {/* City Title & State */}
+                <div className="mt-4">
+                  <span className={`inline-block px-2 py-0.5 rounded-md text-[10px] font-bold border mb-1.5 ${loc.accentBg}`}>
+                    {loc.tag}
+                  </span>
+                  <h3 className="font-display text-lg font-extrabold text-slate-900 group-hover:text-blue-600 transition-colors leading-tight">
+                    {loc.name}
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium mt-0.5">{loc.state}</p>
+                </div>
+
+                {/* Description Highlight */}
+                <p className="mt-3 text-xs text-slate-600 leading-relaxed font-medium line-clamp-3">
                   {loc.highlight}
                 </p>
               </div>
 
+              {/* Bottom Mode Pill & Arrow */}
               <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-3 text-xs">
-                <span className="font-semibold text-slate-500 flex items-center gap-1">
-                  {loc.isRemote ? <Laptop size={13} className="text-blue-600" /> : <Building size={13} className="text-slate-400" />}
-                  {loc.mode}
+                <span className="font-semibold text-slate-500 flex items-center gap-1.5 text-[11px]">
+                  {loc.isRemote ? (
+                    <Laptop size={13} className="text-blue-600" />
+                  ) : (
+                    <Building size={13} className="text-slate-400" />
+                  )}
+                  <span>{loc.mode}</span>
                 </span>
-                <span className="inline-flex items-center gap-1 font-bold text-blue-600 group-hover:translate-x-0.5 transition-transform">
-                  Explore <ArrowRight size={13} />
+
+                <span className="inline-flex items-center gap-1 font-extrabold text-blue-600 group-hover:translate-x-1 transition-transform">
+                  <span>Explore</span>
+                  <ArrowRight size={13} />
                 </span>
               </div>
             </Link>
@@ -152,17 +257,20 @@ export default function LocationExplorer({ title, subtitle }: { title?: string; 
         })}
       </div>
 
-      {/* Cross-city Application Notice */}
-      <div className="mt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50/90 p-4 text-xs text-slate-700">
-        <div className="flex items-center gap-2 font-medium">
-          <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
-          <span>
-            <b>Applying from another city?</b> All 8 Remote roles accept candidates nationwide. Hybrid and on-site employers offer relocation support where marked.
-          </span>
+      {/* Cross-city Application Notice Banner */}
+      <div className="mt-8 rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-5 sm:p-6 text-white shadow-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border border-indigo-900/50">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shrink-0">
+            <CheckCircle2 size={20} />
+          </div>
+          <p className="text-xs sm:text-sm text-slate-200 leading-relaxed font-medium">
+            <strong className="text-white font-extrabold">Applying from another city?</strong> All 8 Remote roles accept candidates nationwide. Hybrid and on-site employers offer relocation support where marked.
+          </p>
         </div>
+
         <Link
           href="/jobs?location=Remote"
-          className="rounded-lg bg-slate-900 px-3.5 py-1.5 font-bold text-white shadow-xs hover:bg-slate-800 shrink-0 transition"
+          className="rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-extrabold text-xs px-5 py-3 shadow-md shadow-emerald-500/20 hover:scale-105 transition active:scale-95 shrink-0 whitespace-nowrap"
         >
           See All Pan-India Remote Roles
         </Link>

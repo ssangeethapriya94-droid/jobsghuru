@@ -29,6 +29,7 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { CareerAssistantResponse, JobSearchFilters, AIMatchedJob } from "@/lib/ai/schemas";
+import CandidateAuthModal from "./CandidateAuthModal";
 
 const QUICK_PROMPTS = [
   "📄 Match jobs with my Resume",
@@ -57,6 +58,10 @@ export default function AICareerAssistant({
     "Jobs in Chennai above ₹12 LPA",
   ]);
 
+  // Auth Protection State
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [pendingQuery, setPendingQuery] = useState<string | null>(null);
+
   // Resume Matching State
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [resumeFileName, setResumeFileName] = useState<string | null>(null);
@@ -65,6 +70,20 @@ export default function AICareerAssistant({
   const [detectedRole, setDetectedRole] = useState<string | null>(null);
   const [activePlanJobId, setActivePlanJobId] = useState<string | null>(null);
   const [isUploadingResume, setIsUploadingResume] = useState(false);
+
+  // Verify Candidate Authentication
+  const verifyCandidateAuth = async (): Promise<boolean> => {
+    try {
+      const res = await fetch("/api/candidate/auth/me", { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.candidate) {
+          return true;
+        }
+      }
+    } catch (err) {}
+    return false;
+  };
 
   // Automatically execute query if initialQuery was supplied via URL/navigation
   useEffect(() => {
@@ -77,6 +96,14 @@ export default function AICareerAssistant({
   // Execute query against the AI backend
   const handleAskAI = async (queryText?: string, previousFilters?: JobSearchFilters) => {
     const textToQuery = (queryText !== undefined ? queryText : query).trim();
+
+    // Check Candidate Login Status
+    const isAuthenticated = await verifyCandidateAuth();
+    if (!isAuthenticated) {
+      setPendingQuery(textToQuery || "Remote React Jobs");
+      setIsAuthModalOpen(true);
+      return;
+    }
     
     // If prompt is "Match jobs with my Resume", open file picker or trigger resume match
     if (textToQuery.includes("Match jobs with my Resume") || textToQuery.includes("my Resume")) {
@@ -121,6 +148,13 @@ export default function AICareerAssistant({
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    const isAuthenticated = await verifyCandidateAuth();
+    if (!isAuthenticated) {
+      setIsAuthModalOpen(true);
+      if (e.target) e.target.value = "";
+      return;
+    }
 
     setIsUploadingResume(true);
     setLoading(true);
@@ -759,6 +793,19 @@ export default function AICareerAssistant({
           </div>
         )}
       </div>
+
+      {/* CANDIDATE AUTHENTICATION POPUP FOR AI ASSISTANT */}
+      <CandidateAuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onSuccess={() => {
+          setIsAuthModalOpen(false);
+          if (pendingQuery) {
+            handleAskAI(pendingQuery);
+            setPendingQuery(null);
+          }
+        }}
+      />
     </section>
   );
 }
