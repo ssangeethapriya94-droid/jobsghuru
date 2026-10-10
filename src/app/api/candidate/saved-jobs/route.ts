@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireCandidate } from "@/lib/candidate/auth";
 import { db } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const { authorized, candidate, response } = await requireCandidate();

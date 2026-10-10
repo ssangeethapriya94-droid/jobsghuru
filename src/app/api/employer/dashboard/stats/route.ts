@@ -4,6 +4,8 @@ import { requireEmployer } from "@/lib/employer/auth";
 import { getCompanyPlanInfo, canSearchCandidates } from "@/lib/employer/entitlements";
 import { UserRole } from "@prisma/client";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   try {
     const { authorized, employer, response } = await requireEmployer([

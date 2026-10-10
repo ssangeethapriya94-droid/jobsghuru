@@ -3,6 +3,8 @@ import { db } from "@/lib/db";
 import { getCurrentCandidate } from "@/lib/candidate/auth";
 import { checkLazyOfferExpiry } from "@/lib/employer/offers";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   try {
     const candidate = await getCurrentCandidate();

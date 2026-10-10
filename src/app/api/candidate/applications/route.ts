@@ -3,6 +3,8 @@ import { requireCandidate } from "@/lib/candidate/auth";
 import { db } from "@/lib/db";
 import { serializeCandidateSafeApplication } from "@/lib/candidate/safeApplication";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const { authorized, candidate, response } = await requireCandidate();

@@ -3,6 +3,8 @@ import { db } from "@/lib/db";
 import { requireEmployer } from "@/lib/employer/auth";
 import { UserRole } from "@prisma/client";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   try {
     const { authorized, employer, response } = await requireEmployer([
